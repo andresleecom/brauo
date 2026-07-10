@@ -1,0 +1,63 @@
+#brauo-bar {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2147483647;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+#brauo-bubble {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: #1f3b57;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+#brauo-bubble:hover { background: #1884c8; }
+
+#brauo-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1f3b57;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+#brauo-controls button {
+  border: none;
+  background: #ffffff22;
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 15px;
+  cursor: pointer;
+  flex: none;
+}
+#brauo-controls button:hover { background: #1884c8; }
+#brauo-controls select {
+  border: none;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+  background: #ffffff;
+  color: #1f3b57;
+  cursor: pointer;
+  max-width: 130px;
+}
+#brauo-status {
+  font-size: 12.5px;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brauo-hover { outline: 2px dashed #1884c8 !important; outline-offset: 2px; cursor: pointer; }
+.brauo-current { background: rgba(255, 224, 96, 0.55) !important; transition: background 0.3s; }

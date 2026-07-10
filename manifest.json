@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Brauo — Read Aloud with Deepgram Aura",
+  "version": "0.1.0",
+  "description": "Point at any paragraph, click, and listen. Natural text-to-speech for any page, in 7+ languages and 100+ Deepgram Aura voices.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://api.deepgram.com/*"],
+  "background": { "service_worker": "background.js" },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["voices.js", "content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

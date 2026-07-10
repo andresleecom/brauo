@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Brauo — Options</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; background: #f2f4f7; color: #22303c; margin: 0; }
+    .card { max-width: 640px; margin: 40px auto; background: #fff; border-radius: 14px;
+            box-shadow: 0 6px 24px rgba(0,0,0,.08); padding: 28px 32px; }
+    h1 { margin: 0 0 4px; font-size: 22px; color: #1f3b57; }
+    .sub { margin: 0 0 24px; color: #5b6b7b; font-size: 13.5px; }
+    label { display: block; font-weight: bold; font-size: 13px; margin: 18px 0 6px; }
+    input[type="password"], input[type="text"], select {
+      width: 100%; box-sizing: border-box; padding: 9px 10px; font-size: 14px;
+      border: 1px solid #cfd9e2; border-radius: 8px; background: #fff;
+    }
+    .row { display: flex; gap: 10px; align-items: center; }
+    .row > * { flex: 1; }
+    .row > button { flex: none; }
+    button {
+      background: #1f3b57; color: #fff; border: none; border-radius: 8px;
+      padding: 9px 16px; font-size: 13.5px; cursor: pointer;
+    }
+    button:hover { background: #1884c8; }
+    button.ghost { background: #eef4fa; color: #1f3b57; }
+    #status { margin-top: 18px; font-size: 13px; color: #1a7f37; min-height: 18px; }
+    #status.error { color: #b42318; }
+    .hint { font-size: 12px; color: #8a99a8; margin-top: 4px; }
+    footer { margin-top: 26px; font-size: 12px; color: #8a99a8; }
+    footer a { color: #1884c8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Brauo</h1>
+    <p class="sub">Read any page aloud with Deepgram Aura voices.</p>
+
+    <label for="apiKey">Deepgram API key</label>
+    <div class="row">
+      <input type="password" id="apiKey" placeholder="Paste your Deepgram API key" autocomplete="off">
+      <button class="ghost" id="toggleKey" type="button">Show</button>
+    </div>
+    <p class="hint">Stored locally in your browser (chrome.storage). Get a free key at <a href="https://console.deepgram.com" target="_blank">console.deepgram.com</a>.</p>
+
+    <label for="voice">Default voice</label>
+    <div class="row">
+      <select id="voice"></select>
+      <button class="ghost" id="preview" type="button">▶ Preview</button>
+    </div>
+    <p class="hint" id="voiceCount"></p>
+    <button class="ghost" id="refresh" type="button">↻ Load all voices from Deepgram</button>
+
+    <label for="speed">Default speed</label>
+    <select id="speed">
+      <option value="1">1×</option>
+      <option value="1.25">1.25×</option>
+      <option value="1.5">1.5×</option>
+      <option value="1.75">1.75×</option>
+      <option value="2">2×</option>
+    </select>
+
+    <div style="margin-top:24px">
+      <button id="save" type="button">Save</button>
+    </div>
+    <div id="status"></div>
+
+    <footer>
+      Brauo is open source — <a href="https://github.com/andresleecom/brauo" target="_blank">github.com/andresleecom/brauo</a>.
+      Text you read is sent to the Deepgram API to generate audio; nothing else leaves your browser.
+    </footer>
+  </div>
+  <script src="voices.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
