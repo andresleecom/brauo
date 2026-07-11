@@ -197,6 +197,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         const provider = PROVIDERS[mode];
         if (!provider) throw brauoError("invalid_provider", `Unknown provider: ${mode}`);
         const requestCfg = withRequestOverrides(cfg, mode, msg);
+        // msg.model: sent by pre-0.2.0 content scripts that stay injected in open tabs across an update.
         const voice = msg.voice || msg.model || requestCfg[mode].voice;
         const { b64, mime, cache } = await provider.speak(msg.text, voice, requestCfg);
         return { ok: true, b64, mime, cache };

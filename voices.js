@@ -76,6 +76,7 @@ const BRAUO_FALLBACK_VOICES = [
   { model: "aura-2-sander-nl", name: "Sander", lang: "nl-NL" }
 ];
 
+// Bundled fallback for Brauo Cloud until the live catalog (GET /v1/voices) is loaded.
 const BRAUO_CLOUD_FALLBACK_VOICES = [
   { model: "brauo-luna-es", name: "Luna", lang: "es-CO" },
   { model: "brauo-nova-en", name: "Nova", lang: "en-US" }
