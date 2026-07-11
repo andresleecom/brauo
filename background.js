@@ -34,6 +34,33 @@ function brauoError(code, message) {
   return error;
 }
 
+async function fetchWithRetry(url, init, attempts = 3) {
+  let lastResponse;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    let retryResponse;
+    try {
+      const response = await fetch(url, init);
+      lastResponse = response;
+      if (response.status !== 429 && response.status < 500) return response;
+      retryResponse = response;
+    } catch (_) {
+      // Network failures are retried below.
+    }
+
+    if (attempt < attempts - 1) {
+      const retryAfter = retryResponse && retryResponse.headers.get("Retry-After");
+      const retryAfterSeconds = retryAfter === null ? NaN : Number(retryAfter);
+      const delay = Number.isFinite(retryAfterSeconds) && retryAfterSeconds >= 0
+        ? Math.min(retryAfterSeconds, 10) * 1000
+        : 700 * (2 ** attempt) + Math.random() * 300;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  if (lastResponse) return lastResponse;
+  throw brauoError("network", "Could not reach the voice service. Check your connection.");
+}
+
 function toBase64(buf) {
   const bytes = new Uint8Array(buf);
   let bin = "";
@@ -49,7 +76,7 @@ const DeepgramProvider = {
     if (!cfg.deepgram.apiKey) {
       throw brauoError("NO_KEY", "Set your Deepgram API key in Options");
     }
-    const res = await fetch(`${DEEPGRAM_API}/v1/speak?model=${encodeURIComponent(voice)}`, {
+    const res = await fetchWithRetry(`${DEEPGRAM_API}/v1/speak?model=${encodeURIComponent(voice)}`, {
       method: "POST",
       headers: {
         "Authorization": "Token " + cfg.deepgram.apiKey,
@@ -72,7 +99,7 @@ const DeepgramProvider = {
     if (!cfg.deepgram.apiKey) {
       throw brauoError("NO_KEY", "Set your Deepgram API key in Options");
     }
-    const res = await fetch(`${DEEPGRAM_API}/v1/models`, {
+    const res = await fetchWithRetry(`${DEEPGRAM_API}/v1/models`, {
       headers: { "Authorization": "Token " + cfg.deepgram.apiKey }
     });
     if (!res.ok) throw brauoError(`http_${res.status}`, `Deepgram ${res.status}`);
@@ -88,13 +115,20 @@ const DeepgramProvider = {
   }
 };
 
+const BRAUO_CLOUD_ERROR_MESSAGES = {
+  invalid_key: "Your Brauo Cloud API key was rejected. Check it in Options.",
+  quota_exceeded: "You have reached your Brauo Cloud usage limit.",
+  voice_not_found: "That voice is not available. Pick another voice in Options.",
+  text_too_long: "This block is too long to synthesize."
+};
+
 const BrauoCloudProvider = {
   async speak(text, voice, cfg) {
     if (!cfg.cloud.apiKey) {
       throw brauoError("NO_KEY", "Set your Brauo Cloud API key in Options");
     }
     const baseUrl = cfg.cloud.baseUrl.replace(/\/$/, "");
-    const res = await fetch(`${baseUrl}/v1/speak`, {
+    const res = await fetchWithRetry(`${baseUrl}/v1/speak`, {
       method: "POST",
       headers: {
         "Authorization": "Bearer " + cfg.cloud.apiKey,
@@ -115,7 +149,7 @@ const BrauoCloudProvider = {
 
   async listVoices(cfg) {
     const baseUrl = cfg.cloud.baseUrl.replace(/\/$/, "");
-    const res = await fetch(`${baseUrl}/v1/voices`);
+    const res = await fetchWithRetry(`${baseUrl}/v1/voices`);
     if (!res.ok) throw await BrauoCloudProvider.responseError(res);
     const data = await res.json();
     return (data.voices || []).map((v) => ({
@@ -128,9 +162,15 @@ const BrauoCloudProvider = {
   async responseError(res) {
     const data = await res.json().catch(() => null);
     const envelope = data && data.error;
+    const code = (envelope && envelope.code) || `http_${res.status}`;
+    const message = BRAUO_CLOUD_ERROR_MESSAGES[code]
+      || (res.status === 429 && "The voice service is busy. Try again in a moment.")
+      || (res.status >= 500 && "The voice service had a temporary problem. Try again.")
+      || (envelope && envelope.message)
+      || `Request failed (${res.status}).`;
     return brauoError(
-      (envelope && envelope.code) || `http_${res.status}`,
-      (envelope && envelope.message) || `Brauo Cloud ${res.status}`
+      code,
+      message
     );
   }
 };

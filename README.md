@@ -78,6 +78,16 @@ You can also switch voices directly from the floating bar while reading.
 - [ ] Sentence-level highlighting
 - [ ] Firefox port
 
+## Smoke test
+
+Load the extension unpacked.
+Pick Brauo Cloud in Options, paste a key, and click Save.
+Open a long article and read it end to end with no Deepgram key configured.
+Confirm the service worker network log shows only `api.brauo.com` requests.
+Read the same paragraph again and confirm it starts noticeably faster and the service reports a cache hit via the `X-Brauo-Cache` response header.
+Switch to the Deepgram service with a Deepgram key and confirm reading still works.
+Confirm `git grep brauo_sk_` finds only documentation placeholders.
+
 ## License
 
 [MIT](LICENSE) © Andres Lee

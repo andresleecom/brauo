@@ -40,7 +40,7 @@
 | 03 | Provider layer in background: DeepgramProvider + BrauoCloudProvider behind speak/listVoices; {ok,b64,mime,cache} contract; cloud fallback catalog | background.js, shared.js, voices.js | build | done |
 | 04 | Storage migration to dual-mode schema; Options mode/keys UI with explicit Save; mode-aware content bar | background.js, options.html, options.js, content.js, shared.js | build+flow | done |
 | 05 | manifest host_permissions + neutral name/description + version 0.2.0 + README dual-mode rewrite | manifest.json, README.md | review | done |
-| 06 | Retry/backoff for 429/5xx/network + cloud error code messages + E1 smoke checklist in README | background.js, shared.js, README.md | build+flow | pending |
+| 06 | Retry/backoff for 429/5xx/network + cloud error code messages + E1 smoke checklist in README | background.js, shared.js, README.md | build+flow | done |
 
 Bar legend: build = diff review + node --check · review = diff review + docs read · +flow = also drive the affected flow.
 
