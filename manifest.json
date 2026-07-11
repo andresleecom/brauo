@@ -1,14 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Brauo - Read Aloud",
-  "version": "0.2.0",
-  "description": "Point at any paragraph, click, and listen. Natural text to speech for any page, with Brauo Cloud voices or your own Deepgram key.",
+  "name": "__MSG_appName__",
+  "version": "0.2.1",
+  "description": "__MSG_appDesc__",
+  "default_locale": "en",
+  "homepage_url": "https://github.com/andresleecom/brauo",
   "permissions": ["storage"],
   "host_permissions": ["https://api.deepgram.com/*", "https://api.brauo.com/*"],
   "background": { "service_worker": "background.js" },
   "options_page": "options.html",
   "icons": {
     "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },

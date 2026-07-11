@@ -15,7 +15,13 @@ The block being read is highlighted and kept in view.
 Tables are read row by row.
 Long paragraphs are split at sentence boundaries to respect service request limits.
 
-## Install (unpacked)
+## Install
+
+### From the Chrome Web Store
+
+Coming soon. The listing link will land here once published.
+
+### Unpacked (developers)
 
 1. Clone this repo:
    ```
@@ -64,9 +70,11 @@ You can also switch voices directly from the floating bar while reading.
 - Keys never leave your browser except to authenticate with the selected service.
 - Brauo has no analytics and no tracking.
 
+See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
+
 ## Notes
 
-- Version 0.2.0 adds Brauo Cloud mode alongside the original bring-your-own-key mode.
+- See [CHANGELOG.md](CHANGELOG.md) for version history.
 - Audio requests are made from the extension service worker, so pages with strict CSP work fine.
 - Built with plain Manifest V3, with no build step and no dependencies.
 
