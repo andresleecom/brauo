@@ -64,6 +64,8 @@ You can also switch voices directly from the floating bar while reading.
 - Keys never leave your browser except to authenticate with the selected service.
 - Brauo has no analytics and no tracking.
 
+See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
+
 ## Notes
 
 - Version 0.2.0 adds Brauo Cloud mode alongside the original bring-your-own-key mode.

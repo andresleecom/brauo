@@ -32,7 +32,7 @@
 ## Tasks
 | # | Task | Scope (files/areas) | Bar | Status |
 |---|------|---------------------|-----|--------|
-| 01 | PRIVACY.md (CWS-compliant, dual service, neutral cloud copy) + README privacy link | PRIVACY.md, README.md (one link line) | review | pending |
+| 01 | PRIVACY.md (CWS-compliant, dual service, neutral cloud copy) + README privacy link | PRIVACY.md, README.md (one link line) | review | done |
 | 02 | Asset pipeline: store/promo-tile.html + store/render-assets.mjs producing icon32, promo, 2 screenshots | store/promo-tile.html, store/render-assets.mjs | build+flow | pending |
 | 03 | _locales en + es and manifest store fields: default_locale, __MSG__ name/description, icons.32, homepage_url, version 0.2.1 | _locales/**, manifest.json | build | pending |
 | 04 | CHANGELOG.md (0.1.0, 0.2.0, 0.2.1) + README store-oriented install section | CHANGELOG.md, README.md | review | pending |
