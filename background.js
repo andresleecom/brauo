@@ -1,9 +1,11 @@
+importScripts("shared.js");
+
 // Brauo service worker: talks to the Deepgram API so content scripts never hit CORS.
 
 const API = "https://api.deepgram.com";
 
 async function getSettings() {
-  return chrome.storage.sync.get({ apiKey: "", model: "aura-2-celeste-es", speed: "1" });
+  return chrome.storage.sync.get(BRAUO_SETTINGS_DEFAULTS);
 }
 
 function toBase64(buf) {

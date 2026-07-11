@@ -35,7 +35,7 @@
 ## Tasks
 | # | Task | Scope (files/areas) | Bar | Status |
 |---|------|---------------------|-----|--------|
-| 01 | Shared constants/defaults module; dedupe settings defaults + voice select rendering | shared.js (new), manifest.json (js list only), background.js, content.js, options.js, options.html | build | pending |
+| 01 | Shared constants/defaults module; dedupe settings defaults + voice select rendering | shared.js (new), manifest.json (js list only), background.js, content.js, options.js, options.html | build | done |
 | 02 | Content audio cache keyed by hash(text+voice); insertion-order eviction; drop rejected entries so the next attempt retries | content.js | build | pending |
 | 03 | Provider layer in background: DeepgramProvider + BrauoCloudProvider behind speak/listVoices; {ok,b64,mime,cache} contract; cloud fallback catalog | background.js, shared.js, voices.js | build | pending |
 | 04 | Storage migration to dual-mode schema; Options mode/keys UI with explicit Save; mode-aware content bar | background.js, options.html, options.js, content.js, shared.js | build+flow | pending |

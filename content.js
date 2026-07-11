@@ -8,7 +8,7 @@
   const BLOCKS = "p, h1, h2, h3, h4, h5, h6, li, blockquote, figcaption, tr, dd, dt, pre";
   const MAX_CHARS = 1800; // Deepgram limit is 2000 per request
 
-  let settings = { apiKey: "", model: "aura-2-celeste-es", speed: "1" };
+  let settings = { ...BRAUO_SETTINGS_DEFAULTS };
   let catalog = null;
 
   let readingMode = false;
@@ -57,43 +57,9 @@
 
   const setStatus = (t) => { statusEl.textContent = t; };
 
-  function langLabel(lang) {
-    try {
-      const base = (lang || "").split("-")[0];
-      const dn = new Intl.DisplayNames(["en"], { type: "language" });
-      const name = dn.of(base) || lang;
-      const region = lang.includes("-") ? ` (${lang.split("-")[1]})` : "";
-      return name.charAt(0).toUpperCase() + name.slice(1) + region;
-    } catch (_) { return lang; }
-  }
-
   function renderVoices() {
     const voices = (catalog && catalog.length ? catalog : BRAUO_FALLBACK_VOICES);
-    const groups = new Map();
-    for (const v of voices) {
-      const key = langLabel(v.lang);
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(v);
-    }
-    voiceSel.innerHTML = "";
-    for (const [label, vs] of [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
-      const og = document.createElement("optgroup");
-      og.label = label;
-      for (const v of vs.sort((a, b) => a.name.localeCompare(b.name))) {
-        const opt = document.createElement("option");
-        opt.value = v.model;
-        opt.textContent = v.name;
-        og.appendChild(opt);
-      }
-      voiceSel.appendChild(og);
-    }
-    if (![...voiceSel.options].some((o) => o.value === settings.model)) {
-      const opt = document.createElement("option");
-      opt.value = settings.model;
-      opt.textContent = settings.model;
-      voiceSel.appendChild(opt);
-    }
-    voiceSel.value = settings.model;
+    brauoRenderVoiceOptions(voiceSel, voices, settings.model);
   }
 
   bubble.addEventListener("click", () => {
@@ -146,7 +112,7 @@
   });
 
   // ---------- Settings ----------
-  chrome.storage.sync.get({ apiKey: "", model: "aura-2-celeste-es", speed: "1" }, (s) => {
+  chrome.storage.sync.get(BRAUO_SETTINGS_DEFAULTS, (s) => {
     settings = s;
     speedSel.value = s.speed;
     chrome.storage.local.get({ catalog: null }, (l) => {
