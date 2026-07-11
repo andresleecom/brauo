@@ -75,3 +75,8 @@ const BRAUO_FALLBACK_VOICES = [
   { model: "aura-2-roman-nl", name: "Roman", lang: "nl-NL" },
   { model: "aura-2-sander-nl", name: "Sander", lang: "nl-NL" }
 ];
+
+const BRAUO_CLOUD_FALLBACK_VOICES = [
+  { model: "brauo-luna-es", name: "Luna", lang: "es-CO" },
+  { model: "brauo-nova-en", name: "Nova", lang: "en-US" }
+];

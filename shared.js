@@ -1,4 +1,28 @@
 const BRAUO_SETTINGS_DEFAULTS = { apiKey: "", model: "aura-2-celeste-es", speed: "1" };
+const BRAUO_CLOUD_API = "https://api.brauo.com";
+const BRAUO_CLOUD_DEFAULT_VOICE = "brauo-luna-es";
+const BRAUO_MAX_CHARS = { deepgram: 1800, cloud: 1800 };
+
+function brauoNormalizeConfig(sync, local) {
+  const deepgram = sync.deepgram || {
+    apiKey: sync.apiKey,
+    voice: sync.model
+  };
+
+  return {
+    mode: sync.mode === "cloud" ? "cloud" : "deepgram",
+    speed: sync.speed || BRAUO_SETTINGS_DEFAULTS.speed,
+    deepgram: {
+      apiKey: deepgram.apiKey || "",
+      voice: deepgram.voice || BRAUO_SETTINGS_DEFAULTS.model
+    },
+    cloud: {
+      apiKey: local.cloudApiKey || "",
+      voice: (sync.cloud && sync.cloud.voice) || BRAUO_CLOUD_DEFAULT_VOICE,
+      baseUrl: local.cloudBaseUrl || BRAUO_CLOUD_API
+    }
+  };
+}
 
 function brauoLangLabel(lang) {
   try {
