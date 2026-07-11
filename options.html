@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Brauo — Options</title>
+  <title>Brauo Options</title>
   <style>
     body { font-family: Arial, Helvetica, sans-serif; background: #f2f4f7; color: #22303c; margin: 0; }
     .card { max-width: 640px; margin: 40px auto; background: #fff; border-radius: 14px;
@@ -17,6 +17,11 @@
     .row { display: flex; gap: 10px; align-items: center; }
     .row > * { flex: 1; }
     .row > button { flex: none; }
+    .radios { display: flex; gap: 18px; margin-top: 8px; }
+    .radios label { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: normal; }
+    .provider-section[hidden] { display: none; }
+    details { margin-top: 18px; }
+    summary { cursor: pointer; font-size: 13px; font-weight: bold; }
     button {
       background: #1f3b57; color: #fff; border: none; border-radius: 8px;
       padding: 9px 16px; font-size: 13.5px; cursor: pointer;
@@ -33,22 +38,54 @@
 <body>
   <div class="card">
     <h1>Brauo</h1>
-    <p class="sub">Read any page aloud with Deepgram Aura voices.</p>
+    <p class="sub">Read any page aloud with natural voices.</p>
 
-    <label for="apiKey">Deepgram API key</label>
-    <div class="row">
-      <input type="password" id="apiKey" placeholder="Paste your Deepgram API key" autocomplete="off">
-      <button class="ghost" id="toggleKey" type="button">Show</button>
+    <label>Voice service</label>
+    <div class="radios">
+      <label><input type="radio" name="mode" value="cloud"> Brauo Cloud</label>
+      <label><input type="radio" name="mode" value="deepgram" checked> Deepgram with your own key</label>
     </div>
-    <p class="hint">Stored locally in your browser (chrome.storage). Get a free key at <a href="https://console.deepgram.com" target="_blank">console.deepgram.com</a>.</p>
 
-    <label for="voice">Default voice</label>
-    <div class="row">
-      <select id="voice"></select>
-      <button class="ghost" id="preview" type="button">▶ Preview</button>
-    </div>
-    <p class="hint" id="voiceCount"></p>
-    <button class="ghost" id="refresh" type="button">↻ Load all voices from Deepgram</button>
+    <section class="provider-section" id="cloudSection" hidden>
+      <label for="cloudKey">API key</label>
+      <div class="row">
+        <input type="password" id="cloudKey" placeholder="brauo_sk_..." autocomplete="off">
+        <button class="ghost" id="cloudToggleKey" type="button">Show</button>
+      </div>
+      <p class="hint">Stored only on this device (chrome.storage.local).</p>
+
+      <label for="cloudVoice">Default voice</label>
+      <div class="row">
+        <select id="cloudVoice"></select>
+        <button class="ghost" id="cloudPreview" type="button">▶ Preview</button>
+      </div>
+      <p class="hint" id="cloudVoiceCount"></p>
+      <button class="ghost" id="cloudRefresh" type="button">Load voices</button>
+
+      <details>
+        <summary>Advanced</summary>
+        <label for="cloudBaseUrl">Service URL</label>
+        <input type="text" id="cloudBaseUrl" placeholder="https://api.brauo.com" autocomplete="off">
+        <p class="hint">Leave empty for the default service. A custom service must allow cross-origin requests from the extension.</p>
+      </details>
+    </section>
+
+    <section class="provider-section" id="deepgramSection">
+      <label for="apiKey">Deepgram API key</label>
+      <div class="row">
+        <input type="password" id="apiKey" placeholder="Paste your Deepgram API key" autocomplete="off">
+        <button class="ghost" id="toggleKey" type="button">Show</button>
+      </div>
+      <p class="hint">Stored locally in your browser (chrome.storage). Get a free key at <a href="https://console.deepgram.com" target="_blank">console.deepgram.com</a>.</p>
+
+      <label for="voice">Default voice</label>
+      <div class="row">
+        <select id="voice"></select>
+        <button class="ghost" id="preview" type="button">▶ Preview</button>
+      </div>
+      <p class="hint" id="voiceCount"></p>
+      <button class="ghost" id="refresh" type="button">↻ Load all voices from Deepgram</button>
+    </section>
 
     <label for="speed">Default speed</label>
     <select id="speed">
@@ -65,10 +102,11 @@
     <div id="status"></div>
 
     <footer>
-      Brauo is open source — <a href="https://github.com/andresleecom/brauo" target="_blank">github.com/andresleecom/brauo</a>.
-      Text you read is sent to the Deepgram API to generate audio; nothing else leaves your browser.
+      Brauo is open source: <a href="https://github.com/andresleecom/brauo" target="_blank">github.com/andresleecom/brauo</a>.
+      Text you read goes to the voice service you select, either Brauo Cloud or your own Deepgram account, to generate audio.
     </footer>
   </div>
+  <script src="shared.js"></script>
   <script src="voices.js"></script>
   <script src="options.js"></script>
 </body>

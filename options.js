@@ -1,50 +1,29 @@
 // Brauo options page.
 const $ = (id) => document.getElementById(id);
 let catalog = null;
+let cloudCatalog = null;
 let previewAudio = null;
 
-function langLabel(lang) {
-  try {
-    const base = (lang || "").split("-")[0];
-    const dn = new Intl.DisplayNames(["en"], { type: "language" });
-    const name = dn.of(base) || lang;
-    const region = lang.includes("-") ? ` (${lang.split("-")[1]})` : "";
-    return name.charAt(0).toUpperCase() + name.slice(1) + region;
-  } catch (_) { return lang; }
-}
-
-function voices() {
+function deepgramVoices() {
   return catalog && catalog.length ? catalog : BRAUO_FALLBACK_VOICES;
 }
 
-function renderVoices(selected) {
-  const sel = $("voice");
-  const groups = new Map();
-  for (const v of voices()) {
-    const key = langLabel(v.lang);
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(v);
-  }
-  sel.innerHTML = "";
-  for (const [label, vs] of [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
-    const og = document.createElement("optgroup");
-    og.label = label;
-    for (const v of vs.sort((a, b) => a.name.localeCompare(b.name))) {
-      const opt = document.createElement("option");
-      opt.value = v.model;
-      opt.textContent = v.accent ? `${v.name} — ${v.accent}` : v.name;
-      og.appendChild(opt);
-    }
-    sel.appendChild(og);
-  }
-  if (selected && ![...sel.options].some((o) => o.value === selected)) {
-    const opt = document.createElement("option");
-    opt.value = selected;
-    opt.textContent = selected;
-    sel.appendChild(opt);
-  }
-  if (selected) sel.value = selected;
-  $("voiceCount").textContent = `${voices().length} voices available` + (catalog ? " (live catalog)" : " (bundled list — load the live catalog for all voices)");
+function cloudVoices() {
+  return cloudCatalog && cloudCatalog.length ? cloudCatalog : BRAUO_CLOUD_FALLBACK_VOICES;
+}
+
+function renderDeepgramVoices(selected) {
+  const voices = deepgramVoices();
+  brauoRenderVoiceOptions($("voice"), voices, selected, { withAccent: true });
+  $("voiceCount").textContent = `${voices.length} voices available` +
+    (catalog && catalog.length ? " (live catalog)" : " (bundled list - load the live catalog for all voices)");
+}
+
+function renderCloudVoices(selected) {
+  const voices = cloudVoices();
+  brauoRenderVoiceOptions($("cloudVoice"), voices, selected);
+  $("cloudVoiceCount").textContent = `${voices.length} voices available` +
+    (cloudCatalog && cloudCatalog.length ? " (live catalog)" : " (bundled list)");
 }
 
 function setStatus(msg, isError) {
@@ -53,61 +32,165 @@ function setStatus(msg, isError) {
   el.className = isError ? "error" : "";
 }
 
-$("toggleKey").addEventListener("click", () => {
-  const inp = $("apiKey");
-  const show = inp.type === "password";
-  inp.type = show ? "text" : "password";
-  $("toggleKey").textContent = show ? "Hide" : "Show";
-});
+function toggleSections() {
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+  $("cloudSection").hidden = mode !== "cloud";
+  $("deepgramSection").hidden = mode !== "deepgram";
+}
 
-$("refresh").addEventListener("click", async () => {
-  const apiKey = $("apiKey").value.trim();
-  if (!apiKey) return setStatus("Enter your API key first.", true);
-  await chrome.storage.sync.set({ apiKey });
-  setStatus("Loading voices…");
-  chrome.runtime.sendMessage({ type: "catalog" }, (resp) => {
-    if (!resp || !resp.ok) return setStatus("Could not load voices: " + (resp ? resp.error : "no response"), true);
-    catalog = resp.voices;
-    renderVoices($("voice").value);
-    setStatus(`Loaded ${catalog.length} voices from Deepgram.`);
-  });
-});
+function togglePassword(inputId, buttonId) {
+  const input = $(inputId);
+  const show = input.type === "password";
+  input.type = show ? "text" : "password";
+  $(buttonId).textContent = show ? "Hide" : "Show";
+}
 
-$("preview").addEventListener("click", () => {
-  const model = $("voice").value;
-  const v = voices().find((x) => x.model === model);
-  if (previewAudio) { previewAudio.pause(); previewAudio = null; }
-  if (v && v.sample) {
-    previewAudio = new Audio(v.sample);
-    previewAudio.play().catch(() => setStatus("Could not play the sample.", true));
-    return;
-  }
-  const apiKey = $("apiKey").value.trim();
-  if (!apiKey) return setStatus("Enter your API key to preview this voice.", true);
-  chrome.storage.sync.set({ apiKey }, () => {
-    setStatus("Generating preview…");
-    chrome.runtime.sendMessage({ type: "tts", model, text: "Hi! This is how I sound. I can read any page for you." }, (resp) => {
-      if (!resp || !resp.ok) return setStatus("Preview failed: " + (resp ? resp.error : "no response"), true);
-      previewAudio = new Audio("data:audio/mp3;base64," + resp.b64);
-      previewAudio.play();
-      setStatus("");
+function sendMessage(message) {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(message, (response) => {
+      if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
+      resolve(response);
     });
   });
+}
+
+function stopPreview() {
+  if (!previewAudio) return;
+  previewAudio.pause();
+  previewAudio = null;
+}
+
+function playUrl(url) {
+  stopPreview();
+  previewAudio = new Audio(url);
+  return previewAudio.play();
+}
+
+function playResponse(resp) {
+  return playUrl("data:" + (resp.mime || "audio/mp3") + ";base64," + resp.b64);
+}
+
+$("toggleKey").addEventListener("click", () => togglePassword("apiKey", "toggleKey"));
+$("cloudToggleKey").addEventListener("click", () => togglePassword("cloudKey", "cloudToggleKey"));
+document.querySelectorAll('input[name="mode"]').forEach((radio) => radio.addEventListener("change", toggleSections));
+
+$("refresh").addEventListener("click", async () => {
+  const key = $("apiKey").value.trim();
+  if (!key) return setStatus("Enter your API key first.", true);
+  setStatus("Loading voices…");
+  try {
+    const resp = await sendMessage({ type: "catalog", mode: "deepgram", key });
+    if (!resp || !resp.ok) throw new Error(resp ? resp.error : "no response");
+    catalog = resp.voices;
+    renderDeepgramVoices($("voice").value);
+    setStatus(`Loaded ${catalog.length} voices from Deepgram.`);
+  } catch (e) {
+    setStatus("Could not load voices: " + e.message, true);
+  }
 });
 
-$("save").addEventListener("click", () => {
-  chrome.storage.sync.set({
-    apiKey: $("apiKey").value.trim(),
-    model: $("voice").value,
-    speed: $("speed").value
-  }, () => setStatus("Saved ✓"));
+$("cloudRefresh").addEventListener("click", async () => {
+  const baseUrl = $("cloudBaseUrl").value.trim() || undefined;
+  setStatus("Loading voices…");
+  try {
+    const resp = await sendMessage({ type: "catalog", mode: "cloud", baseUrl });
+    if (!resp || !resp.ok) throw new Error(resp ? resp.error : "no response");
+    cloudCatalog = resp.voices;
+    renderCloudVoices($("cloudVoice").value);
+    setStatus(`Loaded ${cloudCatalog.length} voices.`);
+  } catch (e) {
+    setStatus("Could not load voices: " + e.message, true);
+  }
 });
 
-chrome.storage.sync.get({ apiKey: "", model: "aura-2-celeste-es", speed: "1" }, (s) => {
-  $("apiKey").value = s.apiKey;
-  $("speed").value = s.speed;
-  chrome.storage.local.get({ catalog: null }, (l) => {
-    catalog = l.catalog;
-    renderVoices(s.model);
-  });
+$("preview").addEventListener("click", async () => {
+  const voice = $("voice").value;
+  const selected = deepgramVoices().find((item) => item.model === voice);
+  stopPreview();
+  if (selected && selected.sample) {
+    try {
+      await playUrl(selected.sample);
+      setStatus("");
+    } catch (_) {
+      setStatus("Could not play the sample.", true);
+    }
+    return;
+  }
+  const key = $("apiKey").value.trim();
+  if (!key) return setStatus("Enter your API key to preview this voice.", true);
+  setStatus("Generating preview…");
+  try {
+    const resp = await sendMessage({
+      type: "tts",
+      mode: "deepgram",
+      voice,
+      key,
+      text: "Hi! This is how I sound. I can read any page for you."
+    });
+    if (!resp || !resp.ok) throw new Error(resp ? resp.error : "no response");
+    await playResponse(resp);
+    setStatus("");
+  } catch (e) {
+    setStatus("Preview failed: " + e.message, true);
+  }
 });
+
+$("cloudPreview").addEventListener("click", async () => {
+  const key = $("cloudKey").value.trim();
+  if (!key) return setStatus("Enter your API key to preview voices.", true);
+  stopPreview();
+  setStatus("Generating preview…");
+  try {
+    const resp = await sendMessage({
+      type: "tts",
+      mode: "cloud",
+      voice: $("cloudVoice").value,
+      key,
+      baseUrl: $("cloudBaseUrl").value.trim() || undefined,
+      text: "Hi! This is how I sound. I can read any page for you."
+    });
+    if (!resp || !resp.ok) throw new Error(resp ? resp.error : "no response");
+    await playResponse(resp);
+    setStatus("");
+  } catch (e) {
+    setStatus("Preview failed: " + e.message, true);
+  }
+});
+
+$("save").addEventListener("click", async () => {
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+  try {
+    await Promise.all([
+      chrome.storage.sync.set({
+        mode,
+        speed: $("speed").value,
+        deepgram: { apiKey: $("apiKey").value.trim(), voice: $("voice").value },
+        cloud: { voice: $("cloudVoice").value }
+      }),
+      chrome.storage.local.set({
+        cloudApiKey: $("cloudKey").value.trim(),
+        cloudBaseUrl: $("cloudBaseUrl").value.trim()
+      })
+    ]);
+    setStatus("Saved ✓");
+  } catch (e) {
+    setStatus("Could not save: " + e.message, true);
+  }
+});
+
+Promise.all([
+  chrome.storage.sync.get(null),
+  chrome.storage.local.get({ cloudApiKey: "", cloudBaseUrl: "", catalog: null, cloudCatalog: null })
+]).then(([sync, local]) => {
+  const cfg = brauoNormalizeConfig(sync, local);
+  catalog = local.catalog;
+  cloudCatalog = local.cloudCatalog;
+  $("apiKey").value = cfg.deepgram.apiKey;
+  $("cloudKey").value = local.cloudApiKey || "";
+  $("cloudBaseUrl").value = local.cloudBaseUrl || "";
+  $("speed").value = cfg.speed;
+  document.querySelector(`input[name="mode"][value="${cfg.mode}"]`).checked = true;
+  renderDeepgramVoices(cfg.deepgram.voice);
+  renderCloudVoices(cfg.cloud.voice);
+  toggleSections();
+}).catch((e) => setStatus("Could not load settings: " + e.message, true));
