@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "Brauo - Read Aloud",
+    "description": "Extension name"
+  },
+  "appDesc": {
+    "message": "Point at any paragraph, click, and listen. Natural text to speech for any page, with Brauo Cloud voices or your own Deepgram key.",
+    "description": "Extension description"
+  }
+}

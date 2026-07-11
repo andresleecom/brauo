@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "Brauo - Lectura en voz alta",
+    "description": "Nombre de la extensión"
+  },
+  "appDesc": {
+    "message": "Apunta a un párrafo, haz clic y escucha. Texto a voz natural para cualquier página, con voces de Brauo Cloud o tu propia clave de Deepgram.",
+    "description": "Descripción de la extensión"
+  }
+}
