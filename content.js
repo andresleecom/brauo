@@ -6,10 +6,12 @@
   window.__brauo = true;
 
   const BLOCKS = "p, h1, h2, h3, h4, h5, h6, li, blockquote, figcaption, tr, dd, dt, pre";
-  const MAX_CHARS = 1800; // Deepgram limit is 2000 per request
 
-  let settings = { ...BRAUO_SETTINGS_DEFAULTS };
+  let cfg = brauoNormalizeConfig({}, {});
+  let lastSync = {};
+  let lastLocal = { cloudApiKey: "", cloudBaseUrl: "", catalog: null, cloudCatalog: null };
   let catalog = null;
+  let cloudCatalog = null;
 
   let readingMode = false;
   let blocks = [];
@@ -37,7 +39,7 @@
   const bar = document.createElement("div");
   bar.id = "brauo-bar";
   bar.innerHTML = `
-    <button id="brauo-bubble" title="Brauo — read this page aloud">🔊</button>
+    <button id="brauo-bubble" title="Brauo: read this page aloud">🔊</button>
     <div id="brauo-controls" style="display:none">
       <button id="brauo-play" title="Pause / Resume">⏸</button>
       <button id="brauo-stop" title="Stop">⏹</button>
@@ -66,10 +68,13 @@
   const statusEl = bar.querySelector("#brauo-status");
 
   const setStatus = (t) => { statusEl.textContent = t; };
+  const activeVoice = () => cfg[cfg.mode].voice;
 
   function renderVoices() {
-    const voices = (catalog && catalog.length ? catalog : BRAUO_FALLBACK_VOICES);
-    brauoRenderVoiceOptions(voiceSel, voices, settings.model);
+    const voices = cfg.mode === "cloud"
+      ? (cloudCatalog && cloudCatalog.length ? cloudCatalog : BRAUO_CLOUD_FALLBACK_VOICES)
+      : (catalog && catalog.length ? catalog : BRAUO_FALLBACK_VOICES);
+    brauoRenderVoiceOptions(voiceSel, voices, activeVoice());
   }
 
   bubble.addEventListener("click", () => {
@@ -77,8 +82,13 @@
     bubble.style.display = "none";
     controls.style.display = "flex";
     collectBlocks();
-    if (!settings.apiKey) setStatus("Set your Deepgram API key in Options ⚙");
-    else setStatus(`Ready — ${blocks.length} blocks. Click where you want to start.`);
+    if (cfg.mode === "cloud" && !cfg.cloud.apiKey) {
+      setStatus("Set your Brauo Cloud API key in Options ⚙");
+    } else if (cfg.mode === "deepgram" && !cfg.deepgram.apiKey) {
+      setStatus("Set your Deepgram API key in Options ⚙");
+    } else {
+      setStatus(`Ready: ${blocks.length} blocks. Click where you want to start.`);
+    }
   });
 
   btnClose.addEventListener("click", () => {
@@ -115,32 +125,47 @@
   });
 
   voiceSel.addEventListener("change", () => {
-    settings.model = voiceSel.value;
-    chrome.storage.sync.set({ model: settings.model });
+    const voice = voiceSel.value;
+    cfg = {
+      ...cfg,
+      [cfg.mode]: { ...cfg[cfg.mode], voice }
+    };
+    if (cfg.mode === "cloud") chrome.storage.sync.set({ cloud: { voice } });
+    else chrome.storage.sync.set({ deepgram: { ...cfg.deepgram, voice } });
     setStatus("Voice: " + voiceSel.selectedOptions[0].textContent);
   });
 
   // ---------- Settings ----------
-  chrome.storage.sync.get(BRAUO_SETTINGS_DEFAULTS, (s) => {
-    settings = s;
-    speedSel.value = s.speed;
-    chrome.storage.local.get({ catalog: null }, (l) => {
-      catalog = l.catalog;
-      renderVoices();
-    });
+  Promise.all([
+    chrome.storage.sync.get(null),
+    chrome.storage.local.get({ cloudApiKey: "", cloudBaseUrl: "", catalog: null, cloudCatalog: null })
+  ]).then(([sync, local]) => {
+    lastSync = sync;
+    lastLocal = local;
+    catalog = local.catalog;
+    cloudCatalog = local.cloudCatalog;
+    cfg = brauoNormalizeConfig(lastSync, lastLocal);
+    speedSel.value = cfg.speed;
+    renderVoices();
   });
+
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "sync") {
-      if (changes.apiKey) settings.apiKey = changes.apiKey.newValue;
-      if (changes.model && changes.model.newValue !== settings.model) {
-        settings.model = changes.model.newValue;
-        renderVoices();
-      }
+    if (area !== "sync" && area !== "local") return;
+    const previousMode = cfg.mode;
+    const previousVoice = activeVoice();
+    const snapshot = area === "sync" ? lastSync : lastLocal;
+    for (const [key, change] of Object.entries(changes)) {
+      if (change.newValue === undefined) delete snapshot[key];
+      else snapshot[key] = change.newValue;
     }
-    if (area === "local" && changes.catalog) {
-      catalog = changes.catalog.newValue;
-      renderVoices();
+    if (area === "local") {
+      catalog = lastLocal.catalog || null;
+      cloudCatalog = lastLocal.cloudCatalog || null;
     }
+    cfg = brauoNormalizeConfig(lastSync, lastLocal);
+    speedSel.value = cfg.speed;
+    const catalogChanged = area === "local" && (changes.catalog || changes.cloudCatalog);
+    if (previousMode !== cfg.mode || previousVoice !== activeVoice() || catalogChanged) renderVoices();
   });
 
   // ---------- Blocks ----------
@@ -165,13 +190,14 @@
   }
 
   function chunkText(t) {
-    if (t.length <= MAX_CHARS) return [t];
+    const maxChars = BRAUO_MAX_CHARS[cfg.mode];
+    if (t.length <= maxChars) return [t];
     const parts = [];
     let rest = t;
-    while (rest.length > MAX_CHARS) {
-      let cut = rest.lastIndexOf(". ", MAX_CHARS);
-      if (cut < MAX_CHARS * 0.5) cut = rest.lastIndexOf(" ", MAX_CHARS);
-      if (cut <= 0) cut = MAX_CHARS;
+    while (rest.length > maxChars) {
+      let cut = rest.lastIndexOf(". ", maxChars);
+      if (cut < maxChars * 0.5) cut = rest.lastIndexOf(" ", maxChars);
+      if (cut <= 0) cut = maxChars;
       parts.push(rest.slice(0, cut + 1).trim());
       rest = rest.slice(cut + 1);
     }
@@ -182,36 +208,37 @@
   // ---------- TTS ----------
   function ttsChunk(text) {
     return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ type: "tts", text, model: settings.model }, (resp) => {
+      chrome.runtime.sendMessage({ type: "tts", text, voice: activeVoice() }, (resp) => {
         if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
         if (!resp || !resp.ok) {
           const err = resp ? resp.error : "no response from service worker";
-          return reject(new Error(err === "NO_KEY" ? "Set your Deepgram API key in Options ⚙" : err));
+          return reject(new Error(err));
         }
-        resolve(resp.b64);
+        resolve({ b64: resp.b64, mime: resp.mime });
       });
     });
   }
 
   function getBlockAudio(i) {
     const t = textOf(blocks[i]);
-    const key = cacheKey(t, settings.model);
+    const voice = activeVoice();
+    const key = cacheKey(t, voice);
     if (!cache.has(key)) {
       const p = Promise.all(chunkText(t).map(ttsChunk));
       cache.set(key, p);
       p.catch(() => { if (cache.get(key) === p) cache.delete(key); });
       if (cache.size > 24) {
-        const nextKey = blocks[i + 1] ? cacheKey(textOf(blocks[i + 1]), settings.model) : null;
+        const nextKey = blocks[i + 1] ? cacheKey(textOf(blocks[i + 1]), voice) : null;
         for (const k of cache.keys()) { if (k !== key && k !== nextKey) { cache.delete(k); break; } }
       }
     }
     return cache.get(key);
   }
 
-  function playB64(b64) {
+  function playPart(part) {
     return new Promise((resolve) => {
       resolveCurrent = resolve;
-      audio = new Audio("data:audio/mp3;base64," + b64);
+      audio = new Audio("data:" + (part.mime || "audio/mp3") + ";base64," + part.b64);
       audio.playbackRate = parseFloat(speedSel.value);
       audio.onended = () => { resolveCurrent = null; resolve(); };
       audio.onerror = () => { resolveCurrent = null; resolve(); };
@@ -250,9 +277,9 @@
       if (!playing || session !== mySession) break;
       if (idx + 1 < blocks.length) getBlockAudio(idx + 1).catch(() => {});
       setStatus(`Reading ${idx + 1} / ${blocks.length}`);
-      for (const b64 of parts) {
+      for (const part of parts) {
         if (!playing || session !== mySession) break;
-        await playB64(b64);
+        await playPart(part);
       }
       if (!playing || session !== mySession) break;
       idx++;

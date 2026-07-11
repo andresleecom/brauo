@@ -4,7 +4,24 @@ importScripts("shared.js");
 
 const DEEPGRAM_API = "https://api.deepgram.com";
 
+async function migrateStorage() {
+  const sync = await chrome.storage.sync.get(null);
+  if (!("apiKey" in sync) && !("model" in sync)) return;
+  await chrome.storage.sync.set({
+    mode: sync.mode || "deepgram",
+    deepgram: sync.deepgram || {
+      apiKey: sync.apiKey || "",
+      voice: sync.model || BRAUO_DEEPGRAM_DEFAULT_VOICE
+    },
+    cloud: sync.cloud || { voice: BRAUO_CLOUD_DEFAULT_VOICE }
+  });
+  await chrome.storage.sync.remove(["apiKey", "model"]);
+}
+
+const storageMigration = migrateStorage();
+
 async function getConfig() {
+  await storageMigration;
   return brauoNormalizeConfig(
     await chrome.storage.sync.get(null),
     await chrome.storage.local.get({ cloudApiKey: "", cloudBaseUrl: "" })

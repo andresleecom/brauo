@@ -1,5 +1,5 @@
-const BRAUO_SETTINGS_DEFAULTS = { apiKey: "", model: "aura-2-celeste-es", speed: "1" };
 const BRAUO_CLOUD_API = "https://api.brauo.com";
+const BRAUO_DEEPGRAM_DEFAULT_VOICE = "aura-2-celeste-es";
 const BRAUO_CLOUD_DEFAULT_VOICE = "brauo-luna-es";
 const BRAUO_MAX_CHARS = { deepgram: 1800, cloud: 1800 };
 
@@ -11,10 +11,10 @@ function brauoNormalizeConfig(sync, local) {
 
   return {
     mode: sync.mode === "cloud" ? "cloud" : "deepgram",
-    speed: sync.speed || BRAUO_SETTINGS_DEFAULTS.speed,
+    speed: sync.speed || "1",
     deepgram: {
       apiKey: deepgram.apiKey || "",
-      voice: deepgram.voice || BRAUO_SETTINGS_DEFAULTS.model
+      voice: deepgram.voice || BRAUO_DEEPGRAM_DEFAULT_VOICE
     },
     cloud: {
       apiKey: local.cloudApiKey || "",
