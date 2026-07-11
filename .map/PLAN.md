@@ -36,7 +36,7 @@
 | 02 | Asset pipeline: store/promo-tile.html + store/render-assets.mjs producing icon32, promo, 2 screenshots | store/promo-tile.html, store/render-assets.mjs | build+flow | done |
 | 03 | _locales en + es and manifest store fields: default_locale, __MSG__ name/description, icons.32, homepage_url, version 0.2.1 | _locales/**, manifest.json | build | done |
 | 04 | CHANGELOG.md (0.1.0, 0.2.0, 0.2.1) + README store-oriented install section | CHANGELOG.md, README.md | review | done |
-| 05 | store/SUBMIT.md: full submission checklist, listing copy en/es, permission justification, screenshot guide, zip command, D01 follow-up note | store/SUBMIT.md | review | pending |
+| 05 | store/SUBMIT.md: full submission checklist, listing copy en/es, permission justification, screenshot guide, zip command, D01 follow-up note | store/SUBMIT.md | review | done |
 
 Bar legend: build = diff review + node --check/JSON parse · review = diff review + docs read · +flow = orchestrator also runs the renders and validates outputs.
 
