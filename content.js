@@ -23,6 +23,16 @@
   let currentEl = null;
   const cache = new Map();
 
+  function cacheKey(text, voice) {
+    const value = voice + "\0" + text;
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < value.length; i++) {
+      hash ^= value.charCodeAt(i);
+      hash = Math.imul(hash, 0x01000193);
+    }
+    return voice + ":" + (hash >>> 0).toString(16).padStart(8, "0") + ":" + text.length;
+  }
+
   // ---------- UI ----------
   const bar = document.createElement("div");
   bar.id = "brauo-bar";
@@ -107,7 +117,6 @@
   voiceSel.addEventListener("change", () => {
     settings.model = voiceSel.value;
     chrome.storage.sync.set({ model: settings.model });
-    cache.clear();
     setStatus("Voice: " + voiceSel.selectedOptions[0].textContent);
   });
 
@@ -125,7 +134,6 @@
       if (changes.apiKey) settings.apiKey = changes.apiKey.newValue;
       if (changes.model && changes.model.newValue !== settings.model) {
         settings.model = changes.model.newValue;
-        cache.clear();
         renderVoices();
       }
     }
@@ -186,14 +194,18 @@
   }
 
   function getBlockAudio(i) {
-    if (!cache.has(i)) {
-      const t = textOf(blocks[i]);
-      cache.set(i, Promise.all(chunkText(t).map(ttsChunk)));
+    const t = textOf(blocks[i]);
+    const key = cacheKey(t, settings.model);
+    if (!cache.has(key)) {
+      const p = Promise.all(chunkText(t).map(ttsChunk));
+      cache.set(key, p);
+      p.catch(() => { if (cache.get(key) === p) cache.delete(key); });
       if (cache.size > 24) {
-        for (const k of cache.keys()) { if (k !== i && k !== i + 1) { cache.delete(k); break; } }
+        const nextKey = blocks[i + 1] ? cacheKey(textOf(blocks[i + 1]), settings.model) : null;
+        for (const k of cache.keys()) { if (k !== key && k !== nextKey) { cache.delete(k); break; } }
       }
     }
-    return cache.get(i);
+    return cache.get(key);
   }
 
   function playB64(b64) {
