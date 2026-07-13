@@ -3,6 +3,10 @@
 **Point at a paragraph, click, and listen.**
 Brauo is an open-source Chrome extension that reads any web page aloud with natural voices via Brauo Cloud.
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/andresleecom/brauo?sort=semver)](https://github.com/andresleecom/brauo/releases/latest)
+[![Verified build](https://img.shields.io/badge/build-provenance%20attested-brightgreen)](#verify-your-download)
+
 ## How it works
 
 1. Click the **Brauo icon in the browser toolbar** to start reading mode on the current page.
@@ -16,16 +20,35 @@ Long paragraphs are split at sentence boundaries to respect request limits.
 
 ## Install
 
-### From the Chrome Web Store
+### From the Chrome Web Store (recommended)
 
-Coming soon. The listing link will appear here once Brauo is published.
+Coming soon. The listing link will appear here once Brauo is published. The Chrome Web Store is the recommended way to install: it updates automatically, and Google reviews every release.
 
-### Unpacked (developers)
+### Manual install from a release
 
-1. Download this repository and extract it.
-2. Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the `brauo` folder.
-3. Get a free Brauo API key at [brauo.com](https://brauo.com). The free tier includes approximately 20 credits per day.
-4. Open the extension **Options**, paste the key, choose a voice, and click **Save**.
+1. Download `brauo-<version>.zip` from the [latest release](https://github.com/andresleecom/brauo/releases/latest).
+2. Optional but recommended: [verify the download](#verify-your-download).
+3. Unzip it, then open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the unzipped folder.
+4. Get a free Brauo API key at [brauo.com](https://brauo.com). The free tier includes approximately 20 credits per day.
+5. Open the extension **Options**, paste the key, choose a voice, and click **Save**.
+
+## Verify your download
+
+Brauo is plain, unminified JavaScript under the MIT license. Every file in the release zip is identical to the source in this repository at the matching tag, so you can read exactly what you run.
+
+Each release is built by GitHub Actions - not by hand - and ships with a SHA-256 checksum and a signed build-provenance attestation.
+
+Check the download's integrity:
+
+```
+sha256sum -c brauo-<version>.zip.sha256
+```
+
+Verify GitHub Actions built the zip from this repository's tagged commit:
+
+```
+gh attestation verify brauo-<version>.zip --repo andresleecom/brauo
+```
 
 ## Usage
 
