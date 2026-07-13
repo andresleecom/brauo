@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
   "name": "__MSG_appName__",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "__MSG_appDesc__",
   "default_locale": "en",
   "homepage_url": "https://github.com/andresleecom/brauo",
   "permissions": ["storage"],
-  "host_permissions": ["https://api.deepgram.com/*", "https://api.brauo.com/*"],
+  "host_permissions": ["https://api.brauo.com/*"],
   "background": { "service_worker": "background.js" },
   "options_page": "options.html",
   "icons": {

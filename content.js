@@ -9,8 +9,7 @@
 
   let cfg = brauoNormalizeConfig({}, {});
   let lastSync = {};
-  let lastLocal = { cloudApiKey: "", cloudBaseUrl: "", catalog: null, cloudCatalog: null };
-  let catalog = null;
+  let lastLocal = { cloudApiKey: "", cloudBaseUrl: "", cloudCatalog: null };
   let cloudCatalog = null;
 
   let readingMode = false;
@@ -68,12 +67,10 @@
   const statusEl = bar.querySelector("#brauo-status");
 
   const setStatus = (t) => { statusEl.textContent = t; };
-  const activeVoice = () => cfg[cfg.mode].voice;
+  const activeVoice = () => cfg.cloud.voice;
 
   function renderVoices() {
-    const voices = cfg.mode === "cloud"
-      ? (cloudCatalog && cloudCatalog.length ? cloudCatalog : BRAUO_CLOUD_FALLBACK_VOICES)
-      : (catalog && catalog.length ? catalog : BRAUO_FALLBACK_VOICES);
+    const voices = cloudCatalog && cloudCatalog.length ? cloudCatalog : BRAUO_CLOUD_FALLBACK_VOICES;
     brauoRenderVoiceOptions(voiceSel, voices, activeVoice());
   }
 
@@ -82,10 +79,8 @@
     bubble.style.display = "none";
     controls.style.display = "flex";
     collectBlocks();
-    if (cfg.mode === "cloud" && !cfg.cloud.apiKey) {
-      setStatus("Set your Brauo Cloud API key in Options ⚙");
-    } else if (cfg.mode === "deepgram" && !cfg.deepgram.apiKey) {
-      setStatus("Set your Deepgram API key in Options ⚙");
+    if (!cfg.cloud.apiKey) {
+      setStatus("Set your Brauo API key in Options ⚙");
     } else {
       setStatus(`Ready: ${blocks.length} blocks. Click where you want to start.`);
     }
@@ -126,23 +121,18 @@
 
   voiceSel.addEventListener("change", () => {
     const voice = voiceSel.value;
-    cfg = {
-      ...cfg,
-      [cfg.mode]: { ...cfg[cfg.mode], voice }
-    };
-    if (cfg.mode === "cloud") chrome.storage.sync.set({ cloud: { voice } });
-    else chrome.storage.sync.set({ deepgram: { ...cfg.deepgram, voice } });
+    cfg = { ...cfg, cloud: { ...cfg.cloud, voice } };
+    chrome.storage.sync.set({ cloud: { voice } });
     setStatus("Voice: " + voiceSel.selectedOptions[0].textContent);
   });
 
   // ---------- Settings ----------
   Promise.all([
     chrome.storage.sync.get(null),
-    chrome.storage.local.get({ cloudApiKey: "", cloudBaseUrl: "", catalog: null, cloudCatalog: null })
+    chrome.storage.local.get({ cloudApiKey: "", cloudBaseUrl: "", cloudCatalog: null })
   ]).then(([sync, local]) => {
     lastSync = sync;
     lastLocal = local;
-    catalog = local.catalog;
     cloudCatalog = local.cloudCatalog;
     cfg = brauoNormalizeConfig(lastSync, lastLocal);
     speedSel.value = cfg.speed;
@@ -151,7 +141,6 @@
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "sync" && area !== "local") return;
-    const previousMode = cfg.mode;
     const previousVoice = activeVoice();
     const snapshot = area === "sync" ? lastSync : lastLocal;
     for (const [key, change] of Object.entries(changes)) {
@@ -159,13 +148,12 @@
       else snapshot[key] = change.newValue;
     }
     if (area === "local") {
-      catalog = lastLocal.catalog || null;
       cloudCatalog = lastLocal.cloudCatalog || null;
     }
     cfg = brauoNormalizeConfig(lastSync, lastLocal);
     speedSel.value = cfg.speed;
-    const catalogChanged = area === "local" && (changes.catalog || changes.cloudCatalog);
-    if (previousMode !== cfg.mode || previousVoice !== activeVoice() || catalogChanged) renderVoices();
+    const cloudCatalogChanged = area === "local" && changes.cloudCatalog;
+    if (previousVoice !== activeVoice() || cloudCatalogChanged) renderVoices();
   });
 
   // ---------- Blocks ----------
@@ -190,7 +178,7 @@
   }
 
   function chunkText(t) {
-    const maxChars = BRAUO_MAX_CHARS[cfg.mode];
+    const maxChars = BRAUO_MAX_CHARS;
     if (t.length <= maxChars) return [t];
     const parts = [];
     let rest = t;

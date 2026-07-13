@@ -1,22 +1,11 @@
 // Brauo shared constants and helpers, loaded by the service worker, the content script, and the options page.
 const BRAUO_CLOUD_API = "https://api.brauo.com";
-const BRAUO_DEEPGRAM_DEFAULT_VOICE = "aura-2-celeste-es";
 const BRAUO_CLOUD_DEFAULT_VOICE = "brauo-luna-es";
-const BRAUO_MAX_CHARS = { deepgram: 1800, cloud: 1800 }; // both services reject requests near 2000 chars
+const BRAUO_MAX_CHARS = 1800; // the service rejects requests near 2000 chars
 
 function brauoNormalizeConfig(sync, local) {
-  const deepgram = sync.deepgram || {
-    apiKey: sync.apiKey,
-    voice: sync.model
-  };
-
   return {
-    mode: sync.mode === "cloud" ? "cloud" : "deepgram",
     speed: sync.speed || "1",
-    deepgram: {
-      apiKey: deepgram.apiKey || "",
-      voice: deepgram.voice || BRAUO_DEEPGRAM_DEFAULT_VOICE
-    },
     cloud: {
       apiKey: local.cloudApiKey || "",
       voice: (sync.cloud && sync.cloud.voice) || BRAUO_CLOUD_DEFAULT_VOICE,

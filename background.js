@@ -1,31 +1,9 @@
 importScripts("shared.js");
 
-// Brauo service worker: talks to TTS providers so content scripts never hit CORS.
-
-const DEEPGRAM_API = "https://api.deepgram.com";
-
-async function migrateStorage() {
-  const sync = await chrome.storage.sync.get(null);
-  if (!("apiKey" in sync) && !("model" in sync)) return;
-  await chrome.storage.sync.set({
-    mode: sync.mode || "deepgram",
-    deepgram: sync.deepgram || {
-      apiKey: sync.apiKey || "",
-      voice: sync.model || BRAUO_DEEPGRAM_DEFAULT_VOICE
-    },
-    cloud: sync.cloud || { voice: BRAUO_CLOUD_DEFAULT_VOICE }
-  });
-  await chrome.storage.sync.remove(["apiKey", "model"]);
-}
-
-const storageMigration = migrateStorage();
+// Brauo service worker: talks to the TTS service so content scripts never hit CORS.
 
 async function getConfig() {
-  await storageMigration;
-  return brauoNormalizeConfig(
-    await chrome.storage.sync.get(null),
-    await chrome.storage.local.get({ cloudApiKey: "", cloudBaseUrl: "" })
-  );
+  return brauoNormalizeConfig(await chrome.storage.sync.get(null), await chrome.storage.local.get({ cloudApiKey: "", cloudBaseUrl: "" }));
 }
 
 function brauoError(code, message) {
@@ -70,50 +48,6 @@ function toBase64(buf) {
   }
   return btoa(bin);
 }
-
-const DeepgramProvider = {
-  async speak(text, voice, cfg) {
-    if (!cfg.deepgram.apiKey) {
-      throw brauoError("NO_KEY", "Set your Deepgram API key in Options");
-    }
-    const res = await fetchWithRetry(`${DEEPGRAM_API}/v1/speak?model=${encodeURIComponent(voice)}`, {
-      method: "POST",
-      headers: {
-        "Authorization": "Token " + cfg.deepgram.apiKey,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ text })
-    });
-    if (!res.ok) {
-      const detail = await res.text().catch(() => "");
-      throw brauoError(`http_${res.status}`, `Deepgram ${res.status}: ${detail.slice(0, 300)}`);
-    }
-    const contentType = res.headers.get("Content-Type") || "";
-    return {
-      b64: toBase64(await res.arrayBuffer()),
-      mime: contentType.startsWith("audio/") ? contentType : "audio/mp3"
-    };
-  },
-
-  async listVoices(cfg) {
-    if (!cfg.deepgram.apiKey) {
-      throw brauoError("NO_KEY", "Set your Deepgram API key in Options");
-    }
-    const res = await fetchWithRetry(`${DEEPGRAM_API}/v1/models`, {
-      headers: { "Authorization": "Token " + cfg.deepgram.apiKey }
-    });
-    if (!res.ok) throw brauoError(`http_${res.status}`, `Deepgram ${res.status}`);
-    const data = await res.json();
-    return (data.tts || []).map((v) => ({
-      model: v.canonical_name,
-      name: (v.metadata && v.metadata.display_name) || v.name,
-      lang: (v.languages && v.languages[0]) || "?",
-      langs: v.languages || [],
-      accent: (v.metadata && v.metadata.accent) || "",
-      sample: (v.metadata && v.metadata.sample) || ""
-    }));
-  }
-};
 
 const BRAUO_CLOUD_ERROR_MESSAGES = {
   invalid_key: "Your Brauo Cloud API key was rejected. Check it in Options.",
@@ -175,31 +109,22 @@ const BrauoCloudProvider = {
   }
 };
 
-const PROVIDERS = { deepgram: DeepgramProvider, cloud: BrauoCloudProvider };
-
-function withRequestOverrides(cfg, mode, msg) {
-  const overridden = {
-    ...cfg,
-    deepgram: { ...cfg.deepgram },
-    cloud: { ...cfg.cloud }
-  };
-  if (msg.key !== undefined) overridden[mode].apiKey = msg.key;
-  if (mode === "cloud" && msg.baseUrl !== undefined) overridden.cloud.baseUrl = msg.baseUrl;
-  return overridden;
-}
-
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (!msg || !msg.type) return;
   if (msg.type === "tts") {
     getConfig()
       .then(async (cfg) => {
-        const mode = msg.mode || cfg.mode;
-        const provider = PROVIDERS[mode];
-        if (!provider) throw brauoError("invalid_provider", `Unknown provider: ${mode}`);
-        const requestCfg = withRequestOverrides(cfg, mode, msg);
+        const requestCfg = {
+          ...cfg,
+          cloud: {
+            ...cfg.cloud,
+            ...(msg.key !== undefined ? { apiKey: msg.key } : {}),
+            ...(msg.baseUrl !== undefined ? { baseUrl: msg.baseUrl } : {})
+          }
+        };
         // msg.model: sent by pre-0.2.0 content scripts that stay injected in open tabs across an update.
-        const voice = msg.voice || msg.model || requestCfg[mode].voice;
-        const { b64, mime, cache } = await provider.speak(msg.text, voice, requestCfg);
+        const voice = msg.voice || msg.model || cfg.cloud.voice;
+        const { b64, mime, cache } = await BrauoCloudProvider.speak(msg.text, voice, requestCfg);
         return { ok: true, b64, mime, cache };
       })
       .then(sendResponse)
@@ -209,15 +134,17 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === "catalog") {
     getConfig()
       .then(async (cfg) => {
-        const mode = msg.mode || cfg.mode;
-        const provider = PROVIDERS[mode];
-        if (!provider) throw brauoError("invalid_provider", `Unknown provider: ${mode}`);
-        const requestCfg = withRequestOverrides(cfg, mode, msg);
-        const voices = await provider.listVoices(requestCfg);
+        const requestCfg = {
+          ...cfg,
+          cloud: {
+            ...cfg.cloud,
+            ...(msg.key !== undefined ? { apiKey: msg.key } : {}),
+            ...(msg.baseUrl !== undefined ? { baseUrl: msg.baseUrl } : {})
+          }
+        };
+        const voices = await BrauoCloudProvider.listVoices(requestCfg);
         const fetchedAt = new Date().toISOString();
-        await chrome.storage.local.set(mode === "cloud"
-          ? { cloudCatalog: voices, cloudCatalogFetchedAt: fetchedAt }
-          : { catalog: voices, catalogFetchedAt: fetchedAt });
+        await chrome.storage.local.set({ cloudCatalog: voices, cloudCatalogFetchedAt: fetchedAt });
         return { ok: true, voices };
       })
       .then(sendResponse)
