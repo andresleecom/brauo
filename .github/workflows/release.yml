@@ -33,7 +33,7 @@ jobs:
         run: |
           zip -r -X "brauo-${{ steps.v.outputs.version }}.zip" \
             manifest.json background.js content.js content.css \
-            options.html options.js shared.js voices.js icons _locales
+            options.html options.js popup.html popup.js shared.js voices.js icons _locales
 
       - name: Generate checksum
         run: sha256sum "brauo-${{ steps.v.outputs.version }}.zip" | tee "brauo-${{ steps.v.outputs.version }}.zip.sha256"
