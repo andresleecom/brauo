@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.0] - 2026-07-13
+
+- New brand icon: the guillemet (`»`) player mark replaces the speaker icon.
+- The floating reader, options page, and promo art move to the night, paper, and celeste palette.
+
 ## [0.4.0] - 2026-07-13
 
 - The reader now activates from the Brauo toolbar button instead of injecting on every page.
