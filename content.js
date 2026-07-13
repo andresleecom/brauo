@@ -74,7 +74,7 @@
     brauoRenderVoiceOptions(voiceSel, voices, activeVoice());
   }
 
-  bubble.addEventListener("click", () => {
+  function enterReadingMode() {
     readingMode = true;
     bubble.style.display = "none";
     controls.style.display = "flex";
@@ -84,14 +84,24 @@
     } else {
       setStatus(`Ready: ${blocks.length} blocks. Click where you want to start.`);
     }
-  });
+  }
 
-  btnClose.addEventListener("click", () => {
+  function exitReadingMode() {
     stopAll();
     readingMode = false;
     controls.style.display = "none";
     bubble.style.display = "block";
     setHover(null);
+  }
+
+  bubble.addEventListener("click", enterReadingMode);
+  btnClose.addEventListener("click", exitReadingMode);
+
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg && msg.type === "brauo-activate") {
+      if (readingMode) exitReadingMode();
+      else enterReadingMode();
+    }
   });
 
   btnGear.addEventListener("click", () => chrome.runtime.sendMessage({ type: "openOptions" }));

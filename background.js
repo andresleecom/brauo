@@ -157,3 +157,20 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return false;
   }
 });
+
+chrome.action.onClicked.addListener(async (tab) => {
+  if (!tab.id) return;
+  try {
+    // If the reader is already on the page, just toggle it.
+    await chrome.tabs.sendMessage(tab.id, { type: "brauo-activate" });
+  } catch (_) {
+    // Not injected yet: inject the reader into the active tab, then activate it.
+    try {
+      await chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: ["content.css"] });
+      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["shared.js", "voices.js", "content.js"] });
+      await chrome.tabs.sendMessage(tab.id, { type: "brauo-activate" });
+    } catch (__) {
+      // Restricted pages (chrome://, the Web Store, the PDF viewer) cannot be scripted.
+    }
+  }
+});
