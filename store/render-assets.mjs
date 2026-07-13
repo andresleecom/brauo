@@ -150,9 +150,7 @@ try {
   const extensionPath = ROOT.replaceAll("\\", "/");
   const { id: extensionId } = await cdp.send("Extensions.loadUnpacked", { path: extensionPath });
   const options = await openPage(cdp, `chrome-extension://${extensionId}/options.html`, 1280, 800);
-  await waitFor(() => evaluate(cdp, options, `!!document.querySelector('input[name="mode"][value="cloud"]')`), 10000, "options UI");
-  await evaluate(cdp, options, `document.querySelector('input[name="mode"][value="cloud"]').click()`);
-  await waitFor(() => evaluate(cdp, options, `!document.getElementById("cloudSection").hidden`), 5000, "cloud section");
+  await waitFor(() => evaluate(cdp, options, `!!document.getElementById("cloudSection")`), 10000, "options UI");
   await sleep(300);
   await screenshot(cdp, options, path.join(STORE, "screenshot-options-1280x800.png"), 1280, 800);
 
