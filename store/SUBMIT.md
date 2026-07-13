@@ -14,14 +14,14 @@ The commands remove only an older archive with the same name before creating a c
 ### Git Bash
 
 ```bash
-rm -f brauo-0.6.0.zip
-zip -r brauo-0.6.0.zip manifest.json background.js content.js content.css options.html options.js popup.html popup.js shared.js voices.js icons _locales
+rm -f brauo-0.7.0.zip
+zip -r brauo-0.7.0.zip manifest.json background.js content.js content.css options.html options.js popup.html popup.js shared.js voices.js icons _locales
 ```
 
 ### PowerShell
 
 ```powershell
-Remove-Item -LiteralPath .\brauo-0.6.0.zip -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath .\brauo-0.7.0.zip -Force -ErrorAction SilentlyContinue
 $packageFiles = @(
   'manifest.json',
   'background.js',
@@ -36,14 +36,14 @@ $packageFiles = @(
   'icons',
   '_locales'
 )
-Compress-Archive -LiteralPath $packageFiles -DestinationPath .\brauo-0.6.0.zip
+Compress-Archive -LiteralPath $packageFiles -DestinationPath .\brauo-0.7.0.zip
 ```
 
-- [ ] Confirm that `brauo-0.6.0.zip` contains only `manifest.json`, `background.js`, `content.js`, `content.css`, `options.html`, `options.js`, `popup.html`, `popup.js`, `shared.js`, `voices.js`, `icons/`, and `_locales/`.
+- [ ] Confirm that `brauo-0.7.0.zip` contains only `manifest.json`, `background.js`, `content.js`, `content.css`, `options.html`, `options.js`, `popup.html`, `popup.js`, `shared.js`, `voices.js`, `icons/`, and `_locales/`.
 - [ ] Confirm that `_locales/en/messages.json` and `_locales/es/messages.json` are inside the archive.
 - [ ] Open the Package tab in the Developer Dashboard.
-- [ ] Upload `brauo-0.6.0.zip` as a new item.
-- [ ] Confirm that the detected version is `0.6.0`.
+- [ ] Upload `brauo-0.7.0.zip` as a new item.
+- [ ] Confirm that the detected version is `0.7.0`.
 
 ## 3. Store listing tab
 
