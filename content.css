@@ -10,29 +10,31 @@
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  border: none;
-  background: #1f3b57;
-  color: #fff;
-  font-size: 24px;
+  border: 1px solid rgba(238,242,248,0.12);
+  background: #0d1120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 }
-#brauo-bubble:hover { background: #1884c8; }
+#brauo-bubble:hover { border-color: #9ccbe8; }
 
 #brauo-controls {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #1f3b57;
-  color: #fff;
+  background: #0d1120;
+  color: #eef2f8;
+  border: 1px solid rgba(238,242,248,0.12);
   padding: 10px 14px;
   border-radius: 999px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 #brauo-controls button {
   border: none;
-  background: #ffffff22;
-  color: #fff;
+  background: rgba(238,242,248,0.08);
+  color: #eef2f8;
   width: 34px;
   height: 34px;
   border-radius: 50%;
@@ -40,18 +42,19 @@
   cursor: pointer;
   flex: none;
 }
-#brauo-controls button:hover { background: #1884c8; }
+#brauo-controls button:hover { background: #9ccbe8; color: #0a0d16; }
 #brauo-controls select {
-  border: none;
+  border: 1px solid rgba(238,242,248,0.16);
   border-radius: 6px;
   padding: 4px 6px;
   font-size: 12px;
-  background: #ffffff;
-  color: #1f3b57;
+  background: #0d1120;
+  color: #eef2f8;
   cursor: pointer;
   max-width: 130px;
 }
 #brauo-status {
+  color: #eef2f8;
   font-size: 12.5px;
   max-width: 240px;
   white-space: nowrap;
@@ -59,5 +62,5 @@
   text-overflow: ellipsis;
 }
 
-.brauo-hover { outline: 2px dashed #1884c8 !important; outline-offset: 2px; cursor: pointer; }
-.brauo-current { background: rgba(255, 224, 96, 0.55) !important; transition: background 0.3s; }
+.brauo-hover { outline: 2px dashed #9ccbe8 !important; outline-offset: 2px; cursor: pointer; }
+.brauo-current { background: rgba(156,203,232,0.28) !important; transition: background 0.3s; }

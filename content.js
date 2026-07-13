@@ -38,7 +38,7 @@
   const bar = document.createElement("div");
   bar.id = "brauo-bar";
   bar.innerHTML = `
-    <button id="brauo-bubble" title="Brauo: read this page aloud">🔊</button>
+    <button id="brauo-bubble" title="Brauo: read this page aloud"><svg width="22" height="22" viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M16 17 L30 32 L16 47" stroke="#9ccbe8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M34 17 L48 32 L34 47" stroke="#eef2f8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div id="brauo-controls" style="display:none">
       <button id="brauo-play" title="Pause / Resume">⏸</button>
       <button id="brauo-stop" title="Stop">⏹</button>
