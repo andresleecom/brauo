@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.0] - 2026-07-13
+
+- Clicking the Brauo icon now opens a popup showing your plan and remaining credits, with a button to read the current page.
+- Set up from the popup: create a free account and paste your API key.
+
 ## [0.5.0] - 2026-07-13
 
 - New brand icon: the guillemet (`»`) player mark replaces the speaker icon.
