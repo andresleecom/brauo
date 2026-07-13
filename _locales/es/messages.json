@@ -4,7 +4,7 @@
     "description": "Nombre de la extensión"
   },
   "appDesc": {
-    "message": "Apunta a un párrafo, haz clic y escucha. Texto a voz natural para cualquier página, con voces de Brauo Cloud o tu propia clave de Deepgram.",
+    "message": "Apunta a cualquier párrafo, haz clic y escucha. Lee cualquier página en voz alta con voces naturales mediante Brauo Cloud.",
     "description": "Descripción de la extensión"
   }
 }

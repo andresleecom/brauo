@@ -3,9 +3,7 @@
 ## 1. Prerequisites
 
 - [ ] Sign in to the Chrome Web Store Developer Dashboard with the account that will own Brauo.
-- [ ] Register the developer account and pay the one-time USD 5 registration fee.
-- [ ] Keep the current privacy policy URL ready: `https://github.com/andresleecom/brauo/blob/main/PRIVACY.md`.
-- [ ] Replace that URL with `https://brauo.com/privacy` after the page exists and contains the same current policy.
+- [ ] Keep the privacy policy URL ready: `https://brauo.com/privacy`.
 
 ## 2. Build the package
 
@@ -16,14 +14,14 @@ The commands remove only an older archive with the same name before creating a c
 ### Git Bash
 
 ```bash
-rm -f brauo-0.2.1.zip
-zip -r brauo-0.2.1.zip manifest.json background.js content.js content.css options.html options.js shared.js voices.js icons _locales
+rm -f brauo-0.3.0.zip
+zip -r brauo-0.3.0.zip manifest.json background.js content.js content.css options.html options.js shared.js voices.js icons _locales
 ```
 
 ### PowerShell
 
 ```powershell
-Remove-Item -LiteralPath .\brauo-0.2.1.zip -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath .\brauo-0.3.0.zip -Force -ErrorAction SilentlyContinue
 $packageFiles = @(
   'manifest.json',
   'background.js',
@@ -36,14 +34,14 @@ $packageFiles = @(
   'icons',
   '_locales'
 )
-Compress-Archive -LiteralPath $packageFiles -DestinationPath .\brauo-0.2.1.zip
+Compress-Archive -LiteralPath $packageFiles -DestinationPath .\brauo-0.3.0.zip
 ```
 
-- [ ] Confirm that `brauo-0.2.1.zip` contains only `manifest.json`, `background.js`, `content.js`, `content.css`, `options.html`, `options.js`, `shared.js`, `voices.js`, `icons/`, and `_locales/`.
+- [ ] Confirm that `brauo-0.3.0.zip` contains only `manifest.json`, `background.js`, `content.js`, `content.css`, `options.html`, `options.js`, `shared.js`, `voices.js`, `icons/`, and `_locales/`.
 - [ ] Confirm that `_locales/en/messages.json` and `_locales/es/messages.json` are inside the archive.
 - [ ] Open the Package tab in the Developer Dashboard.
-- [ ] Upload `brauo-0.2.1.zip` as a new item.
-- [ ] Confirm that the detected version is `0.2.1`.
+- [ ] Upload `brauo-0.3.0.zip` as a new item.
+- [ ] Confirm that the detected version is `0.3.0`.
 
 ## 3. Store listing tab
 
@@ -62,7 +60,7 @@ Brauo - Read Aloud
 Summary:
 
 ```text
-Point, click, and listen. Natural text to speech for any page with Brauo Cloud voices or your own Deepgram key.
+Point, click, and listen. Read any web page aloud with natural voices via Brauo Cloud.
 ```
 
 Full description:
@@ -70,19 +68,20 @@ Full description:
 ```text
 Point at a paragraph, click, and listen.
 
-Brauo reads any web page aloud with natural voices.
+Brauo reads any web page aloud with natural voices via Brauo Cloud.
 Click the floating speaker bubble, move over the page, and choose where reading should begin.
 Brauo continues through the document, highlights the current block, keeps it in view, and preloads upcoming audio for smooth playback.
 
 Use the floating controls to pause, resume, stop, switch voices, or adjust playback speed from 1x to 2x.
 Tables are read row by row, and long paragraphs are split at sentence boundaries.
 
-Choose voices from Brauo Cloud with one key, or bring your own Deepgram key.
-Your keys are stored in your browser and are sent only to authenticate with the voice service you select.
+Get a free Brauo API key at https://brauo.com, then paste it in the extension's Options page.
+The free tier includes approximately 20 credits per day.
+The API key is stored locally in your browser and is sent only to api.brauo.com to authenticate requests.
 
 Brauo respects your privacy.
 It has no analytics, no tracking, and no ads.
-Only the text you choose to read is sent to the selected voice service, and page URLs are not sent.
+Only the text you choose to read is sent to Brauo Cloud to generate audio, and page URLs are not sent.
 
 Brauo is open source: https://github.com/andresleecom/brauo
 ```
@@ -98,7 +97,7 @@ Brauo - Lectura en voz alta
 Summary:
 
 ```text
-Apunta, haz clic y escucha. Texto a voz natural para cualquier página con voces de Brauo Cloud o tu propia clave de Deepgram.
+Apunta, haz clic y escucha. Lee cualquier página web en voz alta con voces naturales mediante Brauo Cloud.
 ```
 
 Full description:
@@ -106,19 +105,20 @@ Full description:
 ```text
 Apunta a un párrafo, haz clic y escucha.
 
-Brauo lee cualquier página web en voz alta con voces naturales.
+Brauo lee cualquier página web en voz alta con voces naturales mediante Brauo Cloud.
 Haz clic en la burbuja flotante del altavoz, recorre la página y elige dónde debe comenzar la lectura.
 Brauo continúa por el documento, resalta el bloque actual, lo mantiene visible y precarga el próximo audio para ofrecer una reproducción fluida.
 
 Usa los controles flotantes para pausar, reanudar o detener la lectura, cambiar de voz o ajustar la velocidad de reproducción de 1x a 2x.
 Las tablas se leen fila por fila y los párrafos largos se dividen en los límites de las oraciones.
 
-Elige voces de Brauo Cloud con una sola clave o usa tu propia clave de Deepgram.
-Tus claves se guardan en el navegador y solo se envían para autenticarte con el servicio de voz que elijas.
+Obtén una clave gratuita de la API de Brauo en https://brauo.com y pégala en la página de Opciones de la extensión.
+El nivel gratuito incluye aproximadamente 20 créditos al día.
+La clave de la API se guarda localmente en tu navegador y solo se envía a api.brauo.com para autenticar las solicitudes.
 
 Brauo respeta tu privacidad.
 No incluye analíticas, seguimiento ni anuncios.
-Solo se envía al servicio de voz seleccionado el texto que eliges leer, y no se envían las URL de las páginas.
+Solo se envía a Brauo Cloud el texto que eliges leer para generar el audio, y no se envían las URL de las páginas.
 
 Brauo es de código abierto: https://github.com/andresleecom/brauo
 ```
@@ -145,13 +145,13 @@ Haz clic en cualquier párrafo y sigue el texto mientras Brauo lee la página en
 Screenshot 2 caption in English:
 
 ```text
-Choose your voice service, preferred voice, and playback speed in Options.
+Choose your preferred voice and playback speed in Options.
 ```
 
 Screenshot 2 caption in Spanish:
 
 ```text
-Elige el servicio de voz, la voz preferida y la velocidad de reproducción en Opciones.
+Elige la voz preferida y la velocidad de reproducción en Opciones.
 ```
 
 ## 5. Privacy tab
@@ -167,23 +167,15 @@ Brauo reads aloud the text of pages the user chooses.
 Storage permission:
 
 ```text
-The storage permission saves the user's selected voice service, preferred voice, playback speed, and user-provided API keys in the browser.
-The keys are sent only to authenticate requests with the voice service selected by the user.
+The storage permission saves the user's Brauo API key and preferred voice in the browser.
+The API key is stored locally and is sent only to api.brauo.com to authenticate requests.
 ```
 
 Host permission for `https://api.brauo.com/*`:
 
 ```text
-This host permission lets the extension send only the text the user chooses to read and the selected voice ID to Brauo Cloud for speech synthesis.
-The user's Brauo Cloud key is sent to this host only to authenticate the request.
-Page URLs are not sent.
-```
-
-Host permission for `https://api.deepgram.com/*` in bring-your-own-key mode:
-
-```text
-This host permission is used only when the user chooses the bring-your-own-key voice service.
-It lets the extension send the text the user chooses to read, the selected voice ID, and the user's own API key directly to that service for speech synthesis and authentication.
+This host permission lets the extension send the text the user chooses to read and the selected voice to Brauo Cloud, then receive the generated audio.
+The user's Brauo API key is sent to this host only to authenticate the request.
 Page URLs are not sent.
 ```
 
@@ -204,7 +196,7 @@ Remote code explanation, if the dashboard requests one:
 ```text
 Brauo uses no remote code.
 All executable JavaScript is included in the extension package.
-Remote services return synthesized audio, not executable code.
+Brauo Cloud returns generated audio, not executable code.
 ```
 
 ### Data usage
@@ -212,13 +204,12 @@ Remote services return synthesized audio, not executable code.
 - [ ] Check Website content.
 - [ ] Describe Website content as the text the user chooses to read.
 - [ ] Check Authentication information.
-- [ ] Describe Authentication information as user-provided API keys stored in the browser and used only with the selected voice service.
+- [ ] Describe Authentication information as the user-provided Brauo API key stored locally in the browser and used only with api.brauo.com.
 - [ ] Certify that the data is not sold or transferred for purposes unrelated to the single purpose.
 - [ ] Certify that the data is not used or transferred for personalized advertising.
 - [ ] Certify that the data is not used or transferred for creditworthiness or lending purposes.
 - [ ] Certify compliance with the Chrome Web Store User Data Policy, including the Limited Use requirements.
-- [ ] Enter `https://github.com/andresleecom/brauo/blob/main/PRIVACY.md` as the privacy policy URL.
-- [ ] Replace it with `https://brauo.com/privacy` after that page exists.
+- [ ] Enter `https://brauo.com/privacy` as the privacy policy URL.
 
 ## 6. Reviewer notes box
 
@@ -229,17 +220,16 @@ Brauo's entry point is the floating speaker bubble that appears near the lower-r
 Click the bubble to enter reading mode, move the pointer over readable blocks, and click a block to begin reading from that point.
 The floating bar then provides pause, resume, stop, voice, and speed controls.
 
-Cloud mode requires a Brauo Cloud API key, which is entered on the extension's Options page and stored in the browser.
+Brauo requires a free API key from https://brauo.com. The key is entered on the extension's Options page and stored locally in the browser.
 No credential is bundled in the extension or published in the repository.
 If test credentials are required, please request them through the review channel.
-We will issue a temporary Brauo Cloud key for review and revoke it after the review is complete.
+We will issue a temporary Brauo API key for review and revoke it after the review is complete.
 ```
 
 ## 7. Distribution tab
 
 - [ ] Select Public visibility.
 - [ ] Make the listing available in all regions.
-- [ ] Leave pricing set to free.
 - [ ] Save the Distribution tab.
 - [ ] Review every dashboard warning and resolve any incomplete required field before submission.
 
@@ -248,18 +238,10 @@ We will issue a temporary Brauo Cloud key for review and revoke it after the rev
 - [ ] Submit the item for review after the Package, Store listing, Privacy, and Distribution tabs show complete.
 - [ ] Watch the developer-account email address for questions, approval, or a rejection notice.
 
-Most extensions are reviewed within a few days.
-Review can take up to a few weeks, especially for a new extension or one with broad host access.
-If the item remains pending for more than three weeks, contact Chrome Web Store developer support.
-
 If the item is rejected, read the cited policy and compare the dashboard disclosures with the package behavior before replying.
 Answer with the relevant permission justification from this checklist, explain the user-triggered point-click-listen flow, and identify the exact text or package change made if a correction was necessary.
 Do not add a new claim merely to obtain approval.
 Keep the store listing, privacy disclosures, privacy policy, and actual extension behavior consistent, then upload a corrected higher version and resubmit when required.
-
-Planned follow-up:
-
-Switching to an action button with `activeTab` in a future update is a permission reduction and is safe after publish.
 
 ## 9. Re-taking screenshots
 

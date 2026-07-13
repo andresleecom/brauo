@@ -1,43 +1,29 @@
 # Brauo Privacy Policy
 
-Effective date: 2026-07-11
+Effective date: 2026-07-13
 
 ## What Brauo does
 
-Brauo is a Chrome extension that reads user-selected blocks of text aloud.
-It sends text to the voice service the user selects so that service can synthesize audio.
+Brauo is a Chrome extension that reads user-selected blocks of text aloud using Brauo Cloud.
 
 ## What data is processed and when
 
-Brauo sends only the text of blocks the user chooses to read and the selected voice ID.
-Nothing is sent until the user starts reading or plays a voice preview, and the preview sends only a fixed sample sentence, never page content.
-Page URLs are not sent to the selected voice service.
-The selected service also receives the API key needed to authenticate the request.
+Brauo sends only the text of blocks the user chooses to read and the selected voice ID to the Brauo API at `api.brauo.com` so Brauo Cloud can generate audio.
+Nothing is sent until the user starts reading or plays a voice preview; a preview sends only a fixed sample sentence, never page content.
+Page URLs are not sent.
+The API also receives the user's Brauo API key to authenticate the request.
 
 ## Where your text goes
 
-### Brauo Cloud
+The selected text and voice ID are sent only to Brauo Cloud at `api.brauo.com` to generate and return audio for the read-aloud feature.
+Brauo Cloud may cache generated audio using a one-way fingerprint of the text and selected voice so repeated reads are faster.
 
-In Brauo Cloud mode, the selected text and voice ID are sent to `api.brauo.com`.
-Brauo Cloud processes the text solely to synthesize audio for the read-aloud feature.
-Brauo Cloud may rely on third-party speech and infrastructure providers to synthesize and deliver that audio.
-Those providers process data only as needed to support the service.
-Brauo Cloud records request IDs, character counts, and timestamps for quotas and billing.
-Brauo Cloud may cache generated audio using a one-way fingerprint of the text plus the selected voice so repeated reads are faster.
+## API key and settings
 
-### Bring your own Deepgram key
-
-In Deepgram mode, the selected text and voice ID are sent directly to `api.deepgram.com` under the user's own account.
-Deepgram receives the user's API key to authenticate the request.
-Deepgram processes that data under its own privacy terms.
-
-## API keys
-
-API keys are stored in the browser using `chrome.storage`.
-The Brauo Cloud key is stored only on the device in `chrome.storage.local`.
-Keys are sent only to authenticate requests with the selected voice service.
-They are not sent to the other voice service.
-Uninstalling the extension removes everything the extension stored in the browser.
+The Brauo API key is stored only on the device in `chrome.storage.local`.
+The key is sent only to `api.brauo.com` to authenticate requests.
+Extension settings, such as the selected voice and playback speed, are stored in `chrome.storage.sync`.
+Uninstalling the extension removes locally stored extension data from the browser; synced settings remain subject to the browser's sync behavior.
 
 ## What Brauo does not do
 
@@ -50,9 +36,8 @@ Brauo does not sell user data or anything else derived from it.
 ## Data retention
 
 The extension itself does not retain the text sent for reading.
-It stores API keys and extension settings only in the browser as described above.
-Brauo Cloud may retain cached generated audio keyed by a one-way fingerprint of text plus voice to make repeated reads faster.
-Brauo Cloud retains request IDs, character counts, and timestamps as usage metadata for quotas and billing.
+It stores the API key and extension settings only in the browser as described above.
+Brauo Cloud may retain cached generated audio keyed by a one-way fingerprint of the text and voice to make repeated reads faster.
 Brauo Cloud does not receive page URLs.
 
 ## Limited Use

@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "appDesc": {
-    "message": "Point at any paragraph, click, and listen. Natural text to speech for any page, with Brauo Cloud voices or your own Deepgram key.",
+    "message": "Point at any paragraph, click, and listen. Read any page aloud with natural voices via Brauo Cloud.",
     "description": "Extension description"
   }
 }

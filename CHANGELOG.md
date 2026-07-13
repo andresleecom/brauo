@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0] - 2026-07-13
+
+- The extension is now Brauo Cloud only.
+- Removed the separate bring-your-own-provider mode.
+- Simplified setup to one Brauo API key and one host permission for `api.brauo.com`.
+
 ## [0.2.1] - 2026-07-11
 
 - Added localized names and descriptions in English and Spanish.
@@ -9,8 +15,8 @@
 
 ## [0.2.0] - 2026-07-11
 
-- Added Brauo Cloud mode with dual voice services and a cloud key stored on-device.
-- Added per-service voice selection and a provider-neutral cloud interface.
+- Added Brauo Cloud alongside the original bring-your-own-provider mode, with a cloud key stored on-device.
+- Added voice selection for each mode and a neutral cloud interface.
 - Added an audio cache keyed by text and voice.
 - Added retry handling with backoff.
 - Added host permission for api.brauo.com.
@@ -18,5 +24,5 @@
 ## [0.1.0] - 2026-07
 
 - Initial release.
-- Added point-and-click read aloud with Deepgram voices.
-- Supported bringing your own Deepgram key.
+- Added point-and-click read aloud with natural voices.
+- Supported bringing your own provider key.
