@@ -24,6 +24,8 @@
   let currentEl = null;
   const cache = new Map();
 
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
   function cacheKey(text, voice) {
     const value = voice + "\0" + text;
     let hash = 0x811c9dc5;
@@ -50,6 +52,7 @@
         <option value="1.75">1.75×</option>
         <option value="2">2×</option>
       </select>
+      <span id="brauo-spinner"></span>
       <span id="brauo-status">Click a paragraph to start</span>
       <button id="brauo-gear" title="Options">⚙</button>
       <button id="brauo-close" title="Exit reading mode">✕</button>
@@ -65,8 +68,12 @@
   const voiceSel = bar.querySelector("#brauo-voice");
   const speedSel = bar.querySelector("#brauo-speed");
   const statusEl = bar.querySelector("#brauo-status");
+  const spinner = bar.querySelector("#brauo-spinner");
 
-  const setStatus = (t) => { statusEl.textContent = t; };
+  const setStatus = (t, loading = false) => {
+    statusEl.textContent = t;
+    spinner.style.display = loading ? "inline-block" : "none";
+  };
   const activeVoice = () => cfg.cloud.voice;
 
   function renderVoices() {
@@ -133,7 +140,13 @@
     const voice = voiceSel.value;
     cfg = { ...cfg, cloud: { ...cfg.cloud, voice } };
     chrome.storage.sync.set({ cloud: { voice } });
-    setStatus("Voice: " + voiceSel.selectedOptions[0].textContent);
+    if (playing) {
+      cache.clear();
+      setStatus("Switching voice…", true);
+      playFrom(idx >= 0 ? idx : 0);
+    } else {
+      setStatus("Voice: " + voiceSel.selectedOptions[0].textContent);
+    }
   });
 
   // ---------- Settings ----------
@@ -204,13 +217,17 @@
   }
 
   // ---------- TTS ----------
+  const FATAL_CODES = ["NO_KEY", "invalid_key", "quota_exceeded", "voice_not_found", "text_too_long", "invalid_provider"];
+  const isFatal = (e) => !!(e && FATAL_CODES.includes(e.code));
+
   function ttsChunk(text) {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ type: "tts", text, voice: activeVoice() }, (resp) => {
         if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
         if (!resp || !resp.ok) {
-          const err = resp ? resp.error : "no response from service worker";
-          return reject(new Error(err));
+          const err = new Error(resp ? resp.error : "no response from service worker");
+          if (resp && resp.code) err.code = resp.code;
+          return reject(err);
         }
         resolve({ b64: resp.b64, mime: resp.mime });
       });
@@ -265,12 +282,39 @@
       markCurrent(el);
       let parts;
       try {
-        setStatus(`Generating audio ${idx + 1} / ${blocks.length}…`);
+        setStatus(`Generating audio ${idx + 1} / ${blocks.length}…`, true);
         parts = await getBlockAudio(idx);
       } catch (e) {
-        setStatus(e.message);
-        playing = false;
-        break;
+        if (isFatal(e)) {
+          setStatus(e.message);
+          playing = false;
+          btnPlay.textContent = "▶";
+          break;
+        }
+        let recovered = false;
+        for (let attempt = 1; attempt <= 3 && playing && session === mySession; attempt += 1) {
+          setStatus(
+            navigator.onLine
+              ? `Connection interrupted. Reconnecting… (${attempt}/3)`
+              : "You appear to be offline. Waiting to reconnect…",
+            true
+          );
+          await sleep(1000 * attempt);
+          if (!playing || session !== mySession) break;
+          try { parts = await getBlockAudio(idx); recovered = true; break; } catch (_) { /* keep trying */ }
+        }
+        if (!recovered) {
+          if (session === mySession) {
+            playing = false;
+            btnPlay.textContent = "▶";
+            setStatus(
+              navigator.onLine
+                ? "Connection interrupted. Press ▶ to resume."
+                : "You appear to be offline. Press ▶ to resume when you're back."
+            );
+          }
+          break;
+        }
       }
       if (!playing || session !== mySession) break;
       if (idx + 1 < blocks.length) getBlockAudio(idx + 1).catch(() => {});

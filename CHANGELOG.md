@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.7.0] - 2026-07-13
+
+- Reading now recovers from network hiccups: a failed block retries with backoff, and if it still fails the reader pauses and you can resume with the play button instead of stopping silently.
+- Clear status while generating audio, on reconnecting, and when offline.
+- Switching voice mid-read now restarts the current paragraph cleanly in the new voice (no overlapping audio).
+
 ## [0.6.0] - 2026-07-13
 
 - Clicking the Brauo icon now opens a popup showing your plan and remaining credits, with a button to read the current page.

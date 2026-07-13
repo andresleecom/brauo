@@ -12,12 +12,22 @@ function brauoError(code, message) {
   return error;
 }
 
+async function fetchWithTimeout(url, init, ms = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function fetchWithRetry(url, init, attempts = 3) {
   let lastResponse;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     let retryResponse;
     try {
-      const response = await fetch(url, init);
+      const response = await fetchWithTimeout(url, init);
       lastResponse = response;
       if (response.status !== 429 && response.status < 500) return response;
       retryResponse = response;
