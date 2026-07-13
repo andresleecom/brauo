@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.0] - 2026-07-13
+
+- The reader now activates from the Brauo toolbar button instead of injecting on every page.
+- Replaced the broad host access with the `activeTab` and `scripting` permissions, so the extension no longer needs access to all sites.
+
 ## [0.3.0] - 2026-07-13
 
 - The extension is now Brauo Cloud only.

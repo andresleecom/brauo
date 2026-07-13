@@ -14,14 +14,14 @@ The commands remove only an older archive with the same name before creating a c
 ### Git Bash
 
 ```bash
-rm -f brauo-0.3.0.zip
-zip -r brauo-0.3.0.zip manifest.json background.js content.js content.css options.html options.js shared.js voices.js icons _locales
+rm -f brauo-0.4.0.zip
+zip -r brauo-0.4.0.zip manifest.json background.js content.js content.css options.html options.js shared.js voices.js icons _locales
 ```
 
 ### PowerShell
 
 ```powershell
-Remove-Item -LiteralPath .\brauo-0.3.0.zip -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath .\brauo-0.4.0.zip -Force -ErrorAction SilentlyContinue
 $packageFiles = @(
   'manifest.json',
   'background.js',
@@ -34,14 +34,14 @@ $packageFiles = @(
   'icons',
   '_locales'
 )
-Compress-Archive -LiteralPath $packageFiles -DestinationPath .\brauo-0.3.0.zip
+Compress-Archive -LiteralPath $packageFiles -DestinationPath .\brauo-0.4.0.zip
 ```
 
-- [ ] Confirm that `brauo-0.3.0.zip` contains only `manifest.json`, `background.js`, `content.js`, `content.css`, `options.html`, `options.js`, `shared.js`, `voices.js`, `icons/`, and `_locales/`.
+- [ ] Confirm that `brauo-0.4.0.zip` contains only `manifest.json`, `background.js`, `content.js`, `content.css`, `options.html`, `options.js`, `shared.js`, `voices.js`, `icons/`, and `_locales/`.
 - [ ] Confirm that `_locales/en/messages.json` and `_locales/es/messages.json` are inside the archive.
 - [ ] Open the Package tab in the Developer Dashboard.
-- [ ] Upload `brauo-0.3.0.zip` as a new item.
-- [ ] Confirm that the detected version is `0.3.0`.
+- [ ] Upload `brauo-0.4.0.zip` as a new item.
+- [ ] Confirm that the detected version is `0.4.0`.
 
 ## 3. Store listing tab
 
@@ -69,7 +69,7 @@ Full description:
 Point at a paragraph, click, and listen.
 
 Brauo reads any web page aloud with natural voices via Brauo Cloud.
-Click the floating speaker bubble, move over the page, and choose where reading should begin.
+Click the Brauo icon in the browser toolbar, move over the page, and choose where reading should begin.
 Brauo continues through the document, highlights the current block, keeps it in view, and preloads upcoming audio for smooth playback.
 
 Use the floating controls to pause, resume, stop, switch voices, or adjust playback speed from 1x to 2x.
@@ -106,7 +106,7 @@ Full description:
 Apunta a un párrafo, haz clic y escucha.
 
 Brauo lee cualquier página web en voz alta con voces naturales mediante Brauo Cloud.
-Haz clic en la burbuja flotante del altavoz, recorre la página y elige dónde debe comenzar la lectura.
+Haz clic en el icono de Brauo en la barra de herramientas del navegador, recorre la página y elige dónde debe comenzar la lectura.
 Brauo continúa por el documento, resalta el bloque actual, lo mantiene visible y precarga el próximo audio para ofrecer una reproducción fluida.
 
 Usa los controles flotantes para pausar, reanudar o detener la lectura, cambiar de voz o ajustar la velocidad de reproducción de 1x a 2x.
@@ -179,12 +179,11 @@ The user's Brauo API key is sent to this host only to authenticate the request.
 Page URLs are not sent.
 ```
 
-Content script on all sites:
+activeTab and scripting permissions:
 
 ```text
-Brauo can be invoked to read on any page, so its content script must display the reading bubble, identify readable text blocks, highlight the chosen block, and provide playback controls on all sites.
-The extension reads page content only when the user clicks the bubble and then chooses where to start reading.
-It collects no browsing history, analytics, or other browsing data.
+The activeTab and scripting permissions let Brauo inject its reading interface into the current tab only after the user clicks the Brauo toolbar button.
+Brauo requests no access to any site until that click, and it accesses only the tab the user activated.
 ```
 
 ### Remote code
@@ -216,8 +215,8 @@ Brauo Cloud returns generated audio, not executable code.
 Paste the following reviewer notes:
 
 ```text
-Brauo's entry point is the floating speaker bubble that appears near the lower-right corner of ordinary web pages.
-Click the bubble to enter reading mode, move the pointer over readable blocks, and click a block to begin reading from that point.
+Brauo's entry point is the Brauo icon in the browser toolbar.
+Click the Brauo icon in the browser toolbar to enter reading mode, move the pointer over readable blocks, and click a block to begin reading from that point.
 The floating bar then provides pause, resume, stop, voice, and speed controls.
 
 Brauo requires a free API key from https://brauo.com. The key is entered on the extension's Options page and stored locally in the browser.

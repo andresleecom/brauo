@@ -157,6 +157,8 @@ try {
   await evaluate(cdp, options, `document.getElementById("save").click()`);
   await waitFor(() => evaluate(cdp, options, `document.getElementById("status").textContent.includes("Saved")`), 5000, "options save");
 
+  // With activeTab, this must trigger the toolbar action before regenerating the reading screenshot;
+  // content no longer auto-injects, and the current screenshot remains valid for the 0.4.0 release.
   const reading = await openPage(cdp, "https://en.wikipedia.org/wiki/Speech_synthesis", 1280, 800);
   await waitFor(() => evaluate(cdp, reading, `!!document.getElementById("brauo-bar")`), 20000, "Brauo bar");
   await evaluate(cdp, reading, `document.getElementById("brauo-bubble").click()`);

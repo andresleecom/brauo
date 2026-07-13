@@ -5,7 +5,7 @@ Brauo is an open-source Chrome extension that reads any web page aloud with natu
 
 ## How it works
 
-1. Click the floating **🔊 bubble** on any page to enter reading mode.
+1. Click the **Brauo icon in the browser toolbar** to start reading mode on the current page.
 2. Move your mouse: each readable block is highlighted.
 3. **Click the paragraph where you want to start.** Brauo reads from there to the end of the document, advancing block by block and prefetching the next audio for smooth playback.
 4. Use the floating bar to **pause/resume**, **stop**, switch **voice**, or change **speed** (1×–2×).
@@ -30,10 +30,11 @@ Coming soon. The listing link will appear here once Brauo is published.
 ## Usage
 
 1. Open any web page.
-2. Click the floating **🔊 bubble**.
+2. Click the **Brauo icon in the browser toolbar** to start reading mode on the current page.
 3. Point to a paragraph and click it to start reading.
 4. Use the floating controls to pause, resume, stop, change voice, or adjust playback speed.
 
+Brauo activates only on the tab where you click its toolbar icon.
 Brauo sends reading requests only to the Brauo API at `https://api.brauo.com`.
 
 ## Configuration
