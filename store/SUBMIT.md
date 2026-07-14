@@ -170,7 +170,7 @@ Elige la voz preferida y la velocidad de reproducción en Opciones.
 ### Single purpose statement
 
 ```text
-Brauo reads aloud the text of pages the user chooses.
+Brauo reads aloud the text of the web-page blocks the user chooses. The user clicks the Brauo toolbar icon, chooses Read this page, points at a paragraph, and Brauo reads from there with natural voices.
 ```
 
 ### Permission justifications
