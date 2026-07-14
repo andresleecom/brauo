@@ -20,6 +20,7 @@
   let paused = false;
   let session = 0;
   let audio = null;
+  let previewAudio = null;
   let resolveCurrent = null;
   let hoverEl = null;
   let currentEl = null;
@@ -87,6 +88,22 @@
     brauoRenderVoiceOptions(voiceSel, brauoVoicesForPlan(all, cloudPlan), resolved);
   }
 
+  function previewVoice(voice) {
+    if (previewAudio) { try { previewAudio.pause(); } catch (_) {} previewAudio = null; }
+    setStatus("Preview…", true);
+    chrome.runtime.sendMessage({ type: "tts", text: BRAUO_PREVIEW_SAMPLE, voice }, (resp) => {
+      if (chrome.runtime.lastError || !resp || !resp.ok) {
+        setStatus("Preview failed: " + ((resp && resp.error) || (chrome.runtime.lastError && chrome.runtime.lastError.message) || "no response"));
+        return;
+      }
+      previewAudio = new Audio("data:" + (resp.mime || "audio/mp3") + ";base64," + resp.b64);
+      previewAudio.playbackRate = parseFloat(speedSel.value);
+      previewAudio.play().catch(() => {});
+      const opt = voiceSel.selectedOptions[0];
+      setStatus("Voice: " + (opt ? opt.textContent : voice));
+    });
+  }
+
   function enterReadingMode() {
     readingMode = true;
     bubble.style.display = "none";
@@ -147,11 +164,14 @@
     cfg = { ...cfg, cloud: { ...cfg.cloud, voice } };
     chrome.storage.sync.set({ cloud: { voice } });
     if (playing) {
+      // Apply the new voice to upcoming blocks WITHOUT re-reading (and re-charging) the
+      // current one: drop the stale-voice prefetch so the next block is synthesized in the
+      // new voice; the current block finishes in the previous voice.
       cache.clear();
-      setStatus("Switching voice…", true);
-      playFrom(idx >= 0 ? idx : 0);
+      setStatus(`Reading ${idx + 1} / ${blocks.length} · new voice from the next block`);
     } else {
-      setStatus("Voice: " + voiceSel.selectedOptions[0].textContent);
+      // Idle: a short, cheap sample so voices can be compared on identical text.
+      previewVoice(voice);
     }
   });
 
@@ -275,6 +295,7 @@
     paused = false;
     btnPlay.textContent = "⏸";
     if (audio) { try { audio.pause(); audio.src = ""; } catch (_) {} audio = null; }
+    if (previewAudio) { try { previewAudio.pause(); } catch (_) {} previewAudio = null; }
     if (resolveCurrent) { const r = resolveCurrent; resolveCurrent = null; r(); }
     clearCurrent();
   }

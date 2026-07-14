@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.0] - 2026-07-14
+
+- Switching voice no longer re-reads (and re-charges) the current paragraph: the new voice applies from the next block while reading.
+- When not reading, changing voice plays a short sample so you can compare voices without spending credits on the page.
+
 ## [0.8.0] - 2026-07-14
 
 - Free accounts now see only the voices included in the free plan, and the reader switches to a free voice automatically.

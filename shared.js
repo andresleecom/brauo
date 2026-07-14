@@ -1,6 +1,7 @@
 // Brauo shared constants and helpers, loaded by the service worker, the content script, and the options page.
 const BRAUO_CLOUD_API = "https://api.brauo.com";
 const BRAUO_CLOUD_DEFAULT_VOICE = "brauo-luna-es";
+const BRAUO_PREVIEW_SAMPLE = "This is how I sound.";
 const BRAUO_MAX_CHARS = 1800; // the service rejects requests near 2000 chars
 
 function brauoNormalizeConfig(sync, local) {
