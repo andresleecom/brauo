@@ -5,23 +5,29 @@
 - [ ] Sign in to the Chrome Web Store Developer Dashboard with the account that will own Brauo.
 - [ ] Keep the privacy policy URL ready: `https://brauo.com/privacy`.
 
-## 2. Build the package
+## 2. Get the package
 
-Run one of the following command sets from the repository root.
+Preferred: download the exact package that GitHub Actions built and attested for the matching tag.
+It carries a build-provenance attestation and is byte-for-byte the release artifact.
 
+```bash
+gh release download v0.8.0 -R andresleecom/brauo -p "brauo-0.8.0.zip"
+```
+
+Alternative: rebuild locally with one of the command sets below, from the repository root.
 The commands remove only an older archive with the same name before creating a clean package.
 
 ### Git Bash
 
 ```bash
-rm -f brauo-0.7.0.zip
-zip -r brauo-0.7.0.zip manifest.json background.js content.js content.css options.html options.js popup.html popup.js shared.js voices.js icons _locales
+rm -f brauo-0.8.0.zip
+zip -r brauo-0.8.0.zip manifest.json background.js content.js content.css options.html options.js popup.html popup.js shared.js voices.js icons _locales
 ```
 
 ### PowerShell
 
 ```powershell
-Remove-Item -LiteralPath .\brauo-0.7.0.zip -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath .\brauo-0.8.0.zip -Force -ErrorAction SilentlyContinue
 $packageFiles = @(
   'manifest.json',
   'background.js',
@@ -36,14 +42,15 @@ $packageFiles = @(
   'icons',
   '_locales'
 )
-Compress-Archive -LiteralPath $packageFiles -DestinationPath .\brauo-0.7.0.zip
+Compress-Archive -LiteralPath $packageFiles -DestinationPath .\brauo-0.8.0.zip
 ```
 
-- [ ] Confirm that `brauo-0.7.0.zip` contains only `manifest.json`, `background.js`, `content.js`, `content.css`, `options.html`, `options.js`, `popup.html`, `popup.js`, `shared.js`, `voices.js`, `icons/`, and `_locales/`.
+- [ ] Confirm that `brauo-0.8.0.zip` contains only `manifest.json`, `background.js`, `content.js`, `content.css`, `options.html`, `options.js`, `popup.html`, `popup.js`, `shared.js`, `voices.js`, `icons/`, and `_locales/`.
 - [ ] Confirm that `_locales/en/messages.json` and `_locales/es/messages.json` are inside the archive.
-- [ ] Open the Package tab in the Developer Dashboard.
-- [ ] Upload `brauo-0.7.0.zip` as a new item.
-- [ ] Confirm that the detected version is `0.7.0`.
+- [ ] Open the existing item in the Developer Dashboard (do not create a new item; the listing is one item).
+- [ ] If a previous version is Pending review, cancel that submission first so the new version can be uploaded.
+- [ ] Open the Package tab and upload `brauo-0.8.0.zip` as a new package version.
+- [ ] Confirm that the detected version is `0.8.0`.
 
 ## 3. Store listing tab
 
@@ -71,7 +78,8 @@ Full description:
 Point at a paragraph, click, and listen.
 
 Brauo reads any web page aloud with natural voices via Brauo Cloud.
-Click the Brauo icon in the browser toolbar, move over the page, and choose where reading should begin.
+Click the Brauo icon in the browser toolbar to open Brauo, then choose Read this page.
+Point at a paragraph and click to choose where reading should begin.
 Brauo continues through the document, highlights the current block, keeps it in view, and preloads upcoming audio for smooth playback.
 
 Use the floating controls to pause, resume, stop, switch voices, or adjust playback speed from 1x to 2x.
@@ -108,7 +116,8 @@ Full description:
 Apunta a un párrafo, haz clic y escucha.
 
 Brauo lee cualquier página web en voz alta con voces naturales mediante Brauo Cloud.
-Haz clic en el icono de Brauo en la barra de herramientas del navegador, recorre la página y elige dónde debe comenzar la lectura.
+Haz clic en el icono de Brauo en la barra de herramientas del navegador para abrir Brauo y elegir leer la página actual.
+Apunta a un párrafo y haz clic para elegir dónde debe comenzar la lectura.
 Brauo continúa por el documento, resalta el bloque actual, lo mantiene visible y precarga el próximo audio para ofrecer una reproducción fluida.
 
 Usa los controles flotantes para pausar, reanudar o detener la lectura, cambiar de voz o ajustar la velocidad de reproducción de 1x a 2x.
@@ -218,13 +227,14 @@ Paste the following reviewer notes:
 
 ```text
 Brauo's entry point is the Brauo icon in the browser toolbar.
-Click the Brauo icon in the browser toolbar to enter reading mode, move the pointer over readable blocks, and click a block to begin reading from that point.
+Clicking the icon opens a small Brauo popup. With an API key set, the popup shows the plan and remaining credits and a Read this page button; without a key, the popup lets the user paste one.
+Click Read this page to load the reader into the current tab, then move the pointer over readable blocks and click a block to begin reading from that point.
 The floating bar then provides pause, resume, stop, voice, and speed controls.
 
-Brauo requires a free API key from https://brauo.com. The key is entered on the extension's Options page and stored locally in the browser.
+Brauo requires a free API key from https://brauo.com. The key is entered in the popup or on the Options page and stored locally in the browser.
 No credential is bundled in the extension or published in the repository.
-If test credentials are required, please request them through the review channel.
-We will issue a temporary Brauo API key for review and revoke it after the review is complete.
+
+Test credentials for review: paste the persistent review key here in the dashboard box so reviewers can test immediately. The key lives only in the operator's copy and is intentionally not committed to this repository.
 ```
 
 ## 7. Distribution tab
