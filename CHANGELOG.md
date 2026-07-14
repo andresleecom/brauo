@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.0] - 2026-07-14
+
+- Brauo's own voices now show a "Brauo Original" badge in the voice picker.
+- New installs default to a Brauo Original voice in your language (Spanish, Portuguese, or English) instead of a paid voice.
+
 ## [0.9.0] - 2026-07-14
 
 - Switching voice no longer re-reads (and re-charges) the current paragraph: the new voice applies from the next block while reading.

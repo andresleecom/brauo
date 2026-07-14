@@ -106,7 +106,8 @@ const BrauoCloudProvider = {
       model: v.id,
       name: v.display_name || v.id,
       lang: v.language || "?",
-      tier: v.tier || "pro"
+      tier: v.tier || "pro",
+      badge: v.badge || ""
     }));
   },
 

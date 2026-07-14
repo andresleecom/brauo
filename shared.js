@@ -1,15 +1,23 @@
 // Brauo shared constants and helpers, loaded by the service worker, the content script, and the options page.
 const BRAUO_CLOUD_API = "https://api.brauo.com";
-const BRAUO_CLOUD_DEFAULT_VOICE = "brauo-luna-es";
 const BRAUO_PREVIEW_SAMPLE = "This is how I sound.";
 const BRAUO_MAX_CHARS = 1800; // the service rejects requests near 2000 chars
+
+// Default voice for a new user: one of Brauo's own (self-hosted, free) voices in
+// the user's browser language. es -> Elena, pt -> Bia, otherwise Milo (English).
+function brauoDefaultVoice() {
+  const lang = ((typeof navigator !== "undefined" && navigator.language) || "en").slice(0, 2).toLowerCase();
+  if (lang === "es") return "brauo-elena-es";
+  if (lang === "pt") return "brauo-bia-pt";
+  return "brauo-milo-en";
+}
 
 function brauoNormalizeConfig(sync, local) {
   return {
     speed: sync.speed || "1",
     cloud: {
       apiKey: local.cloudApiKey || "",
-      voice: (sync.cloud && sync.cloud.voice) || BRAUO_CLOUD_DEFAULT_VOICE,
+      voice: (sync.cloud && sync.cloud.voice) || brauoDefaultVoice(),
       baseUrl: local.cloudBaseUrl || BRAUO_CLOUD_API
     }
   };
@@ -39,7 +47,8 @@ function brauoRenderVoiceOptions(sel, voiceList, selected, opts) {
     for (const v of voices.sort((a, b) => a.name.localeCompare(b.name))) {
       const opt = document.createElement("option");
       opt.value = v.model;
-      opt.textContent = opts && opts.withAccent && v.accent ? `${v.name} - ${v.accent}` : v.name;
+      const label = opts && opts.withAccent && v.accent ? `${v.name} - ${v.accent}` : v.name;
+      opt.textContent = v.badge ? `${label} · ${v.badge}` : label;
       og.appendChild(opt);
     }
     sel.appendChild(og);
