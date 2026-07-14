@@ -12,7 +12,13 @@ function brauoError(code, message) {
   return error;
 }
 
-async function fetchWithTimeout(url, init, ms = 15000) {
+// Default for account/catalog: fail fast on a hung connection.
+// Speak is longer: free-tier Kokoro on CPU needs ~25s for ~900 chars and ~50s
+// near the 2000-char limit; 15s aborted legitimate synthesis as "network" errors.
+const BRAUO_FETCH_TIMEOUT_MS = 15000;
+const BRAUO_SPEAK_TIMEOUT_MS = 90000;
+
+async function fetchWithTimeout(url, init, ms = BRAUO_FETCH_TIMEOUT_MS) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
   try {
@@ -22,12 +28,12 @@ async function fetchWithTimeout(url, init, ms = 15000) {
   }
 }
 
-async function fetchWithRetry(url, init, attempts = 3) {
+async function fetchWithRetry(url, init, attempts = 3, timeoutMs = BRAUO_FETCH_TIMEOUT_MS) {
   let lastResponse;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     let retryResponse;
     try {
-      const response = await fetchWithTimeout(url, init);
+      const response = await fetchWithTimeout(url, init, timeoutMs);
       lastResponse = response;
       if (response.status !== 429 && response.status < 500) return response;
       retryResponse = response;
@@ -79,7 +85,7 @@ const BrauoCloudProvider = {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({ text, voice, format: "mp3", cache: true })
-    });
+    }, 3, BRAUO_SPEAK_TIMEOUT_MS);
     if (!res.ok) throw await BrauoCloudProvider.responseError(res);
     const contentType = res.headers.get("Content-Type") || "";
     const cache = res.headers.get("X-Brauo-Cache");
