@@ -51,3 +51,23 @@ function brauoRenderVoiceOptions(sel, voiceList, selected, opts) {
   }
   if (selected) sel.value = selected;
 }
+
+function brauoVoicesForPlan(voices, plan) {
+  if (String(plan || "").toLowerCase() === "free") {
+    return voices.filter((v) => v.tier === "free");
+  }
+  return voices;
+}
+
+function brauoResolveVoiceForPlan(voices, plan, selected) {
+  if (String(plan || "").toLowerCase() !== "free") return selected;
+  const allowed = brauoVoicesForPlan(voices, plan);
+  if (allowed.some((v) => v.model === selected)) return selected;
+  if (!allowed.length) return selected;
+  // Snap to a free voice, preferring the current voice's language so a Spanish
+  // reader is not moved to another language just because it was first in the list.
+  const base = (lang) => String(lang || "").split("-")[0].toLowerCase();
+  const current = voices.find((v) => v.model === selected);
+  const sameLang = current && allowed.find((v) => base(v.lang) === base(current.lang));
+  return (sameLang || allowed[0]).model;
+}

@@ -99,7 +99,8 @@ const BrauoCloudProvider = {
     return (data.voices || []).map((v) => ({
       model: v.id,
       name: v.display_name || v.id,
-      lang: v.language || "?"
+      lang: v.language || "?",
+      tier: v.tier || "pro"
     }));
   },
 

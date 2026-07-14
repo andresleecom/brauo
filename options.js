@@ -1,6 +1,7 @@
 // Brauo options page.
 const $ = (id) => document.getElementById(id);
 let cloudCatalog = null;
+let cloudPlan = null;
 let previewAudio = null;
 
 function cloudVoices() {
@@ -8,10 +9,13 @@ function cloudVoices() {
 }
 
 function renderCloudVoices(selected) {
-  const voices = cloudVoices();
-  brauoRenderVoiceOptions($("cloudVoice"), voices, selected);
-  $("cloudVoiceCount").textContent = `${voices.length} voices available` +
+  const all = cloudVoices();
+  const shown = brauoVoicesForPlan(all, cloudPlan);
+  const resolved = brauoResolveVoiceForPlan(all, cloudPlan, selected);
+  brauoRenderVoiceOptions($("cloudVoice"), shown, resolved);
+  $("cloudVoiceCount").textContent = `${shown.length} voices available` +
     (cloudCatalog && cloudCatalog.length ? " (live catalog)" : " (bundled list)");
+  $("cloudUpgrade").style.display = String(cloudPlan || "").toLowerCase() === "free" ? "block" : "none";
 }
 
 function setStatus(msg, isError) {
@@ -109,10 +113,11 @@ $("save").addEventListener("click", async () => {
 
 Promise.all([
   chrome.storage.sync.get(null),
-  chrome.storage.local.get({ cloudApiKey: "", cloudBaseUrl: "", cloudCatalog: null })
+  chrome.storage.local.get({ cloudApiKey: "", cloudBaseUrl: "", cloudCatalog: null, cloudPlan: null })
 ]).then(([sync, local]) => {
   const cfg = brauoNormalizeConfig(sync, local);
   cloudCatalog = local.cloudCatalog;
+  cloudPlan = local.cloudPlan;
   $("cloudKey").value = local.cloudApiKey || "";
   $("cloudBaseUrl").value = local.cloudBaseUrl || "";
   $("speed").value = cfg.speed;

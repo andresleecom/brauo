@@ -9,8 +9,9 @@
 
   let cfg = brauoNormalizeConfig({}, {});
   let lastSync = {};
-  let lastLocal = { cloudApiKey: "", cloudBaseUrl: "", cloudCatalog: null };
+  let lastLocal = { cloudApiKey: "", cloudBaseUrl: "", cloudCatalog: null, cloudPlan: null };
   let cloudCatalog = null;
+  let cloudPlan = null;
 
   let readingMode = false;
   let blocks = [];
@@ -77,8 +78,13 @@
   const activeVoice = () => cfg.cloud.voice;
 
   function renderVoices() {
-    const voices = cloudCatalog && cloudCatalog.length ? cloudCatalog : BRAUO_CLOUD_FALLBACK_VOICES;
-    brauoRenderVoiceOptions(voiceSel, voices, activeVoice());
+    const all = cloudCatalog && cloudCatalog.length ? cloudCatalog : BRAUO_CLOUD_FALLBACK_VOICES;
+    const resolved = brauoResolveVoiceForPlan(all, cloudPlan, activeVoice());
+    if (resolved !== cfg.cloud.voice) {
+      cfg = { ...cfg, cloud: { ...cfg.cloud, voice: resolved } };
+      chrome.storage.sync.set({ cloud: { voice: resolved } });
+    }
+    brauoRenderVoiceOptions(voiceSel, brauoVoicesForPlan(all, cloudPlan), resolved);
   }
 
   function enterReadingMode() {
@@ -152,11 +158,12 @@
   // ---------- Settings ----------
   Promise.all([
     chrome.storage.sync.get(null),
-    chrome.storage.local.get({ cloudApiKey: "", cloudBaseUrl: "", cloudCatalog: null })
+    chrome.storage.local.get({ cloudApiKey: "", cloudBaseUrl: "", cloudCatalog: null, cloudPlan: null })
   ]).then(([sync, local]) => {
     lastSync = sync;
     lastLocal = local;
     cloudCatalog = local.cloudCatalog;
+    cloudPlan = local.cloudPlan;
     cfg = brauoNormalizeConfig(lastSync, lastLocal);
     speedSel.value = cfg.speed;
     renderVoices();
@@ -172,11 +179,13 @@
     }
     if (area === "local") {
       cloudCatalog = lastLocal.cloudCatalog || null;
+      cloudPlan = lastLocal.cloudPlan || null;
     }
     cfg = brauoNormalizeConfig(lastSync, lastLocal);
     speedSel.value = cfg.speed;
     const cloudCatalogChanged = area === "local" && changes.cloudCatalog;
-    if (previousVoice !== activeVoice() || cloudCatalogChanged) renderVoices();
+    const cloudPlanChanged = area === "local" && changes.cloudPlan;
+    if (previousVoice !== activeVoice() || cloudCatalogChanged || cloudPlanChanged) renderVoices();
   });
 
   // ---------- Blocks ----------

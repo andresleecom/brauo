@@ -6,6 +6,7 @@ function showSetup(message = "") {
   ready.style.display = "none";
   setup.style.display = "block";
   document.getElementById("plan").textContent = "";
+  document.getElementById("upgrade").style.display = "none";
   status.textContent = message;
 }
 
@@ -36,6 +37,8 @@ async function loadAccount() {
 
     const { plan, credits } = await response.json();
     const normalizedPlan = String(plan || "").toLowerCase();
+    await chrome.storage.local.set({ cloudPlan: normalizedPlan });
+    document.getElementById("upgrade").style.display = normalizedPlan === "free" ? "block" : "none";
     ready.style.display = "block";
     setup.style.display = "none";
     document.getElementById("plan").textContent = normalizedPlan
@@ -62,7 +65,7 @@ document.getElementById("save").addEventListener("click", async () => {
 });
 
 document.getElementById("account").addEventListener("click", () => {
-  chrome.tabs.create({ url: "https://brauo.com/cuenta" });
+  chrome.tabs.create({ url: "https://brauo.com/account" });
 });
 
 document.getElementById("options").addEventListener("click", () => {

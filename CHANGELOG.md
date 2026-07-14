@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.0] - 2026-07-14
+
+- Free accounts now see only the voices included in the free plan, and the reader switches to a free voice automatically.
+- Added an upgrade link so free users can find the full voice catalog.
+
 ## [0.7.0] - 2026-07-13
 
 - Reading now recovers from network hiccups: a failed block retries with backoff, and if it still fails the reader pauses and you can resume with the play button instead of stopping silently.
