@@ -11,7 +11,7 @@ Preferred: download the exact package that GitHub Actions built and attested for
 It carries a build-provenance attestation and is byte-for-byte the release artifact.
 
 ```bash
-gh release download v0.10.0 -R andresleecom/brauo -p "brauo-0.10.0.zip"
+gh release download v0.12.0 -R andresleecom/brauo -p "brauo-0.12.0.zip"
 ```
 
 Alternative: rebuild locally with one of the command sets below, from the repository root.
@@ -20,14 +20,14 @@ The commands remove only an older archive with the same name before creating a c
 ### Git Bash
 
 ```bash
-rm -f brauo-0.10.0.zip
-zip -r brauo-0.10.0.zip manifest.json background.js content.js content.css options.html options.js popup.html popup.js shared.js voices.js icons _locales
+rm -f brauo-0.12.0.zip
+zip -r brauo-0.12.0.zip manifest.json background.js content.js content.css options.html options.js popup.html popup.js shared.js voices.js icons _locales
 ```
 
 ### PowerShell
 
 ```powershell
-Remove-Item -LiteralPath .\brauo-0.10.0.zip -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath .\brauo-0.12.0.zip -Force -ErrorAction SilentlyContinue
 $packageFiles = @(
   'manifest.json',
   'background.js',
@@ -42,15 +42,15 @@ $packageFiles = @(
   'icons',
   '_locales'
 )
-Compress-Archive -LiteralPath $packageFiles -DestinationPath .\brauo-0.10.0.zip
+Compress-Archive -LiteralPath $packageFiles -DestinationPath .\brauo-0.12.0.zip
 ```
 
-- [ ] Confirm that `brauo-0.10.0.zip` contains only `manifest.json`, `background.js`, `content.js`, `content.css`, `options.html`, `options.js`, `popup.html`, `popup.js`, `shared.js`, `voices.js`, `icons/`, and `_locales/`.
+- [ ] Confirm that `brauo-0.12.0.zip` contains only `manifest.json`, `background.js`, `content.js`, `content.css`, `options.html`, `options.js`, `popup.html`, `popup.js`, `shared.js`, `voices.js`, `icons/`, and `_locales/`.
 - [ ] Confirm that `_locales/en/messages.json` and `_locales/es/messages.json` are inside the archive.
 - [ ] Open the existing item in the Developer Dashboard (do not create a new item; the listing is one item).
 - [ ] If a previous version is Pending review, cancel that submission first so the new version can be uploaded.
-- [ ] Open the Package tab and upload `brauo-0.10.0.zip` as a new package version.
-- [ ] Confirm that the detected version is `0.10.0`.
+- [ ] Open the Package tab and upload `brauo-0.12.0.zip` as a new package version.
+- [ ] Confirm that the detected version is `0.12.0`.
 
 ## 3. Store listing tab
 
