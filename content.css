@@ -43,6 +43,13 @@
   flex: none;
 }
 #brauo-controls button:hover { background: #9ccbe8; color: #0a0d16; }
+#brauo-controls #brauo-selection {
+  width: auto;
+  padding: 0 12px;
+  border-radius: 17px;
+  font-size: 12px;
+  white-space: nowrap;
+}
 #brauo-controls select {
   border: 1px solid rgba(238,242,248,0.16);
   border-radius: 6px;

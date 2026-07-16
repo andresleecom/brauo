@@ -24,6 +24,7 @@
   let resolveCurrent = null;
   let hoverEl = null;
   let currentEl = null;
+  let selRange = null;
   const cache = new Map();
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -46,6 +47,7 @@
     <div id="brauo-controls" style="display:none">
       <button id="brauo-play" title="Pause / Resume">⏸</button>
       <button id="brauo-stop" title="Stop">⏹</button>
+      <button id="brauo-selection" type="button" style="display:none">Read selection</button>
       <select id="brauo-voice" title="Voice"></select>
       <select id="brauo-speed" title="Speed">
         <option value="1">1×</option>
@@ -65,6 +67,7 @@
   const controls = bar.querySelector("#brauo-controls");
   const btnPlay = bar.querySelector("#brauo-play");
   const btnStop = bar.querySelector("#brauo-stop");
+  const btnSelection = bar.querySelector("#brauo-selection");
   const btnGear = bar.querySelector("#brauo-gear");
   const btnClose = bar.querySelector("#brauo-close");
   const voiceSel = bar.querySelector("#brauo-voice");
@@ -109,6 +112,7 @@
     bubble.style.display = "none";
     controls.style.display = "flex";
     collectBlocks();
+    updateSelectionRange();
     if (!cfg.cloud.apiKey) {
       setStatus("Set your Brauo API key in Options ⚙");
     } else {
@@ -136,6 +140,17 @@
 
   btnGear.addEventListener("click", () => chrome.runtime.sendMessage({ type: "openOptions" }));
   btnStop.addEventListener("click", () => { stopAll(); setStatus("Stopped. Click a paragraph to read."); });
+
+  btnSelection.addEventListener("mousedown", (e) => e.preventDefault());
+  btnSelection.addEventListener("click", () => {
+    if (!selRange) return;
+    collectBlocks();
+    if (selRange.start < 0 || selRange.end < selRange.start || selRange.end >= blocks.length) {
+      updateSelectionRange();
+      return;
+    }
+    playFrom(selRange.start, selRange.end);
+  });
 
   btnPlay.addEventListener("click", () => {
     if (!playing) {
@@ -229,6 +244,42 @@
     });
   }
 
+  function selectedBlockRange() {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) return null;
+
+    const selectionElement = (node) => {
+      if (!node) return null;
+      return node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+    };
+    const anchorEl = selectionElement(sel.anchorNode);
+    const focusEl = selectionElement(sel.focusNode);
+    if ((anchorEl && anchorEl.closest("#brauo-bar")) || (focusEl && focusEl.closest("#brauo-bar"))) return null;
+
+    collectBlocks();
+    const idxs = blocks
+      .map((el, i) => sel.containsNode(el, true) ? i : -1)
+      .filter((i) => i >= 0);
+
+    if (idxs.length === 0) {
+      for (const el of [anchorEl, focusEl]) {
+        const block = el && el.closest(BLOCKS);
+        const i = blocks.indexOf(block);
+        if (i >= 0) idxs.push(i);
+      }
+    }
+
+    if (idxs.length === 0) return null;
+    return { start: Math.min(...idxs), end: Math.max(...idxs) };
+  }
+
+  function updateSelectionRange() {
+    selRange = selectedBlockRange();
+    btnSelection.style.display = selRange ? "inline-block" : "none";
+  }
+
+  document.addEventListener("selectionchange", updateSelectionRange);
+
   function chunkText(t) {
     const maxChars = BRAUO_MAX_CHARS;
     if (t.length <= maxChars) return [t];
@@ -300,14 +351,15 @@
     clearCurrent();
   }
 
-  async function playFrom(i) {
+  async function playFrom(i, endIdx = blocks.length - 1) {
+    const isBoundedSelection = arguments.length > 1;
     stopAll();
     const mySession = ++session;
     idx = i;
     playing = true;
     paused = false;
     btnPlay.textContent = "⏸";
-    while (playing && session === mySession && idx < blocks.length) {
+    while (playing && session === mySession && idx <= endIdx) {
       const el = blocks[idx];
       markCurrent(el);
       let parts;
@@ -347,7 +399,7 @@
         }
       }
       if (!playing || session !== mySession) break;
-      if (idx + 1 < blocks.length) getBlockAudio(idx + 1).catch(() => {});
+      if (idx + 1 <= endIdx) getBlockAudio(idx + 1).catch(() => {});
       setStatus(`Reading ${idx + 1} / ${blocks.length}`);
       for (const part of parts) {
         if (!playing || session !== mySession) break;
@@ -356,10 +408,10 @@
       if (!playing || session !== mySession) break;
       idx++;
     }
-    if (session === mySession && idx >= blocks.length && blocks.length > 0) {
+    if (session === mySession && idx > endIdx && blocks.length > 0) {
       playing = false;
       clearCurrent();
-      setStatus("End of document 🎉");
+      setStatus(isBoundedSelection ? "Done reading the selection 🎉" : "End of document 🎉");
     }
   }
 
