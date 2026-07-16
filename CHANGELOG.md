@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.11.0] - 2026-07-16
+
+- The voice list now refreshes on its own, so newly added voices and languages appear without pressing "Load voices" in Options.
+
 ## [0.10.0] - 2026-07-14
 
 - Brauo's own voices now show a "Brauo Original" badge in the voice picker.

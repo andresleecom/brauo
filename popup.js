@@ -2,6 +2,31 @@ const ready = document.getElementById("ready");
 const setup = document.getElementById("setup");
 const status = document.getElementById("status");
 
+// Keep the cached voice catalog fresh so new voices appear without the user
+// having to press "Load voices" in Options. The popup runs on every toolbar
+// click, so a light TTL check here is enough. /v1/voices is public (no key).
+const CATALOG_TTL_MS = 60 * 60 * 1000;
+
+async function refreshCatalogIfStale() {
+  try {
+    const { cloudCatalog, cloudCatalogFetchedAt } = await chrome.storage.local.get({
+      cloudCatalog: null,
+      cloudCatalogFetchedAt: null
+    });
+    // The background worker stores cloudCatalogFetchedAt as an ISO string.
+    const fetchedMs = cloudCatalogFetchedAt ? Date.parse(cloudCatalogFetchedAt) : NaN;
+    const fresh =
+      cloudCatalog &&
+      cloudCatalog.length &&
+      Number.isFinite(fetchedMs) &&
+      Date.now() - fetchedMs < CATALOG_TTL_MS;
+    if (fresh) return;
+    await chrome.runtime.sendMessage({ type: "catalog" });
+  } catch (_) {
+    // Best effort: the picker still falls back to the cached or bundled list.
+  }
+}
+
 function showSetup(message = "") {
   ready.style.display = "none";
   setup.style.display = "block";
@@ -91,3 +116,4 @@ document.getElementById("read").addEventListener("click", async () => {
 });
 
 loadAccount();
+refreshCatalogIfStale();
