@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.12.0] - 2026-07-16
+
+- Sign in with Brauo: connect the extension from brauo.com without pasting an API key (pasting still works as a fallback).
+- Read selection: select text on a page and read just that part, instead of always reading from a paragraph to the end.
+
 ## [0.11.0] - 2026-07-16
 
 - The voice list now refreshes on its own, so newly added voices and languages appear without pressing "Load voices" in Options.
