@@ -79,6 +79,10 @@ document.getElementById("create").addEventListener("click", () => {
   chrome.tabs.create({ url: "https://brauo.com" });
 });
 
+document.getElementById("signin").addEventListener("click", () => {
+  chrome.tabs.create({ url: "https://brauo.com/account" });
+});
+
 document.getElementById("save").addEventListener("click", async () => {
   const key = document.getElementById("key").value.trim();
   if (!key) {
@@ -113,6 +117,12 @@ document.getElementById("read").addEventListener("click", async () => {
     }
   }
   window.close();
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && String(changes.cloudApiKey?.newValue || "").trim()) {
+    loadAccount();
+  }
 });
 
 loadAccount();
