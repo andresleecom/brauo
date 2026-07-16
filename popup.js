@@ -80,7 +80,11 @@ document.getElementById("create").addEventListener("click", () => {
 });
 
 document.getElementById("signin").addEventListener("click", () => {
-  chrome.tabs.create({ url: "https://brauo.com/account/connect" });
+  // Pass our own extension id so the connect page sends the key back to this
+  // exact extension (published and unpacked ids differ).
+  const url = "https://brauo.com/account/connect?ext=" +
+    encodeURIComponent(chrome.runtime.id);
+  chrome.tabs.create({ url });
 });
 
 document.getElementById("save").addEventListener("click", async () => {

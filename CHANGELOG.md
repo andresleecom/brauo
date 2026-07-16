@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.14.0] - 2026-07-16
+
+- Fix Sign in with Brauo so the account page delivers the key back to this exact extension.
+
 ## [0.13.0] - 2026-07-16
 
 - Sign in with Brauo now connects the extension automatically after you log in on brauo.com, with no key to paste.
