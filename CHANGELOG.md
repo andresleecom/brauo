@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.13.0] - 2026-07-16
+
+- Sign in with Brauo now connects the extension automatically after you log in on brauo.com, with no key to paste.
+
 ## [0.12.0] - 2026-07-16
 
 - Sign in with Brauo: connect the extension from brauo.com without pasting an API key (pasting still works as a fallback).

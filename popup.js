@@ -80,7 +80,7 @@ document.getElementById("create").addEventListener("click", () => {
 });
 
 document.getElementById("signin").addEventListener("click", () => {
-  chrome.tabs.create({ url: "https://brauo.com/account" });
+  chrome.tabs.create({ url: "https://brauo.com/account/connect" });
 });
 
 document.getElementById("save").addEventListener("click", async () => {
