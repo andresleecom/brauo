@@ -176,3 +176,30 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 });
 
+chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
+  if (sender.origin !== "https://brauo.com") {
+    sendResponse({ ok: false });
+    return false;
+  }
+  if (!msg || msg.type !== "brauo-connect") {
+    sendResponse({ ok: false });
+    return false;
+  }
+
+  const { apiKey, plan } = msg;
+  if (typeof apiKey !== "string" || !apiKey.trim()) {
+    sendResponse({ ok: false, error: "invalid_key" });
+    return false;
+  }
+
+  const normalizedPlan = String(plan || "").toLowerCase();
+  (async () => {
+    await chrome.storage.local.set({
+      cloudApiKey: apiKey,
+      ...(normalizedPlan ? { cloudPlan: normalizedPlan } : {})
+    });
+    sendResponse({ ok: true });
+  })().catch(() => sendResponse({ ok: false }));
+  return true;
+});
+

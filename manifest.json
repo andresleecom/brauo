@@ -8,6 +8,7 @@
   "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": ["https://api.brauo.com/*"],
   "background": { "service_worker": "background.js" },
+  "externally_connectable": { "matches": ["https://brauo.com/*"] },
   "action": {
     "default_title": "Brauo: read this page aloud",
     "default_popup": "popup.html",
