@@ -26,8 +26,25 @@
   let currentEl = null;
   let selRange = null;
   const cache = new Map();
+  // voiceId -> timestamp when marked slow (persisted in chrome.storage.local).
+  let slowVoices = {};
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  function refreshSlowVoices() {
+    chrome.storage.local.get({ slowVoices: {} }, (local) => {
+      slowVoices = local.slowVoices || {};
+    });
+  }
+
+  function persistSlowVoiceMark(voiceId) {
+    if (!voiceId) return;
+    chrome.storage.local.get({ slowVoices: {} }, (local) => {
+      const next = brauoMarkVoiceSlow(local.slowVoices || {}, voiceId, Date.now());
+      slowVoices = next;
+      chrome.storage.local.set({ slowVoices: next });
+    });
+  }
 
   function cacheKey(text, voice) {
     const value = voice + "\0" + text;
@@ -113,6 +130,7 @@
     controls.style.display = "flex";
     collectBlocks();
     updateSelectionRange();
+    refreshSlowVoices();
     if (!cfg.cloud.apiKey) {
       setStatus("Set your Brauo API key in Options ⚙");
     } else {
@@ -178,6 +196,7 @@
     const voice = voiceSel.value;
     cfg = { ...cfg, cloud: { ...cfg.cloud, voice } };
     chrome.storage.sync.set({ cloud: { voice } });
+    refreshSlowVoices();
     if (playing) {
       // Apply the new voice to upcoming blocks WITHOUT re-reading (and re-charging) the
       // current one: drop the stale-voice prefetch so the next block is synthesized in the
@@ -299,10 +318,16 @@
   // ---------- TTS ----------
   const FATAL_CODES = ["NO_KEY", "invalid_key", "quota_exceeded", "voice_not_found", "text_too_long", "invalid_provider"];
   const isFatal = (e) => !!(e && FATAL_CODES.includes(e.code));
+  const SLOW_REQUEST_MS = 4000;
 
   function ttsChunk(text) {
+    const voice = activeVoice();
+    const started = Date.now();
     return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ type: "tts", text, voice: activeVoice() }, (resp) => {
+      chrome.runtime.sendMessage({ type: "tts", text, voice }, (resp) => {
+        // Only successful synthesis proves the voice is slow; a >4s error is
+        // usually the network (timeouts would mislabel fast voices for 24h).
+        if (resp && resp.ok && Date.now() - started > SLOW_REQUEST_MS) persistSlowVoiceMark(voice);
         if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
         if (!resp || !resp.ok) {
           const err = new Error(resp ? resp.error : "no response from service worker");
@@ -314,6 +339,14 @@
     });
   }
 
+  function trimCache(keepKeys) {
+    if (cache.size <= 24) return;
+    const keep = new Set(keepKeys.filter(Boolean));
+    for (const k of cache.keys()) {
+      if (!keep.has(k)) { cache.delete(k); break; }
+    }
+  }
+
   function getBlockAudio(i) {
     const t = textOf(blocks[i]);
     const voice = activeVoice();
@@ -322,12 +355,142 @@
       const p = Promise.all(chunkText(t).map(ttsChunk));
       cache.set(key, p);
       p.catch(() => { if (cache.get(key) === p) cache.delete(key); });
-      if (cache.size > 24) {
-        const nextKey = blocks[i + 1] ? cacheKey(textOf(blocks[i + 1]), voice) : null;
-        for (const k of cache.keys()) { if (k !== key && k !== nextKey) { cache.delete(k); break; } }
-      }
+      const nextKey = blocks[i + 1] ? cacheKey(textOf(blocks[i + 1]), voice) : null;
+      trimCache([key, nextKey]);
     }
     return cache.get(key);
+  }
+
+  // Piece-level cache for slow (sentence) mode. Prefix avoids clashing with whole-block keys.
+  function getPieceAudio(text) {
+    const voice = activeVoice();
+    const key = "piece:" + cacheKey(text, voice);
+    if (!cache.has(key)) {
+      const p = ttsChunk(text);
+      cache.set(key, p);
+      p.catch(() => { if (cache.get(key) === p) cache.delete(key); });
+      trimCache([key]);
+    }
+    return cache.get(key);
+  }
+
+  async function fetchPieceWithRetry(text, mySession) {
+    try {
+      return await getPieceAudio(text);
+    } catch (e) {
+      if (isFatal(e)) throw e;
+      for (let attempt = 1; attempt <= 3 && playing && session === mySession; attempt += 1) {
+        setStatus(
+          navigator.onLine
+            ? `Connection interrupted. Reconnecting… (${attempt}/3)`
+            : "You appear to be offline. Waiting to reconnect…",
+          true
+        );
+        await sleep(1000 * attempt);
+        if (!playing || session !== mySession) throw e;
+        try {
+          return await getPieceAudio(text);
+        } catch (e2) {
+          if (isFatal(e2)) throw e2;
+        }
+      }
+      throw e;
+    }
+  }
+
+  // Bounded pipeline for slow voices: max 2 TTS requests in flight; play pieces in order.
+  // Next-block prefetch only after the last piece of this block has been requested.
+  async function playBlockSlow(blockIdx, endIdx, mySession) {
+    const pieces = brauoSentencePieces(textOf(blocks[blockIdx]));
+    if (!pieces.length) return true;
+
+    const waiters = pieces.map(() => {
+      let resolve, reject;
+      let settled = false;
+      const p = new Promise((res, rej) => { resolve = res; reject = rej; });
+      // Swallow if the play loop abandons remaining pieces after a failure/stop.
+      p.catch(() => {});
+      p._resolve = (v) => { if (!settled) { settled = true; resolve(v); } };
+      p._reject = (e) => { if (!settled) { settled = true; reject(e); } };
+      return p;
+    });
+
+    let nextReq = 0;
+    let inFlight = 0;
+    let allowPrefetch = false;
+    let prefetch = null; // { pieces, idx } for slow next block, or { fast: true }
+    let pipelineFailed = false;
+
+    const pump = () => {
+      if (pipelineFailed || !playing || session !== mySession) return;
+      while (inFlight < 2 && playing && session === mySession) {
+        if (nextReq < pieces.length) {
+          const i = nextReq++;
+          inFlight += 1;
+          if (nextReq >= pieces.length) allowPrefetch = true;
+          fetchPieceWithRetry(pieces[i], mySession).then((part) => {
+            waiters[i]._resolve(part);
+          }).catch((err) => {
+            pipelineFailed = true;
+            waiters[i]._reject(err);
+          }).finally(() => {
+            inFlight -= 1;
+            pump();
+          });
+          continue;
+        }
+        if (!allowPrefetch || blockIdx + 1 > endIdx) break;
+        if (!prefetch) {
+          const nextText = textOf(blocks[blockIdx + 1]);
+          const voice = activeVoice();
+          if (brauoIsVoiceSlow(slowVoices, voice, Date.now())) {
+            prefetch = { pieces: brauoSentencePieces(nextText), idx: 0 };
+          } else {
+            prefetch = { fast: true };
+            getBlockAudio(blockIdx + 1).catch(() => {});
+            break;
+          }
+        }
+        if (prefetch.fast) break;
+        if (prefetch.idx >= prefetch.pieces.length) break;
+        const pText = prefetch.pieces[prefetch.idx++];
+        inFlight += 1;
+        getPieceAudio(pText).catch(() => {}).finally(() => {
+          inFlight -= 1;
+          pump();
+        });
+      }
+    };
+
+    setStatus(`Generating audio ${blockIdx + 1} / ${blocks.length}…`, true);
+    pump();
+
+    try {
+      for (let i = 0; i < pieces.length; i++) {
+        if (!playing || session !== mySession) return false;
+        const part = await waiters[i];
+        if (!playing || session !== mySession) return false;
+        if (i === 0) setStatus(`Reading ${blockIdx + 1} / ${blocks.length}`);
+        await playPart(part);
+      }
+      return true;
+    } catch (e) {
+      if (!playing || session !== mySession) return false;
+      if (isFatal(e)) {
+        setStatus(e.message);
+        playing = false;
+        btnPlay.textContent = "▶";
+        return false;
+      }
+      playing = false;
+      btnPlay.textContent = "▶";
+      setStatus(
+        navigator.onLine
+          ? "Connection interrupted. Press ▶ to resume."
+          : "You appear to be offline. Press ▶ to resume when you're back."
+      );
+      return false;
+    }
   }
 
   function playPart(part) {
@@ -362,6 +525,14 @@
     while (playing && session === mySession && idx <= endIdx) {
       const el = blocks[idx];
       markCurrent(el);
+
+      if (brauoIsVoiceSlow(slowVoices, activeVoice(), Date.now())) {
+        const ok = await playBlockSlow(idx, endIdx, mySession);
+        if (!ok || !playing || session !== mySession) break;
+        idx++;
+        continue;
+      }
+
       let parts;
       try {
         setStatus(`Generating audio ${idx + 1} / ${blocks.length}…`, true);

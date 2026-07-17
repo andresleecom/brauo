@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.0] - 2026-07-17
+
+- Slow voices now start speaking within a few seconds: long paragraphs are requested sentence by sentence and playback begins as soon as the first one is ready, instead of waiting for the whole paragraph.
+- The reader detects slow voices automatically (and re-checks daily), so fast voices keep their existing behavior.
+
 ## [0.14.0] - 2026-07-16
 
 - Fix Sign in with Brauo so the account page delivers the key back to this exact extension.

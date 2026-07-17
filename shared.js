@@ -81,3 +81,68 @@ function brauoResolveVoiceForPlan(voices, plan, selected) {
   const sameLang = current && allowed.find((v) => base(v.lang) === base(current.lang));
   return (sameLang || allowed[0]).model;
 }
+
+// Sentence-mode helpers for slow voices (time-to-first-audio).
+// Boundaries match content.js chunkText: cut at ". " when present.
+const BRAUO_SLOW_VOICE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function brauoSentencePieces(text) {
+  const t = String(text || "").replace(/\s+/g, " ").trim();
+  if (!t) return [];
+
+  const sentences = [];
+  let rest = t;
+  while (rest.length) {
+    const cut = rest.indexOf(". ");
+    if (cut < 0) {
+      if (rest.trim()) sentences.push(rest.trim());
+      break;
+    }
+    const s = rest.slice(0, cut + 1).trim();
+    if (s) sentences.push(s);
+    rest = rest.slice(cut + 1).replace(/^\s+/, "");
+  }
+  if (!sentences.length) return [];
+
+  const pieces = [];
+  let first = sentences.shift();
+  // First piece = first sentence alone; hard-split at 200 chars if longer.
+  if (first.length > 200) {
+    pieces.push(first.slice(0, 200).trim());
+    const rem = first.slice(200).trim();
+    if (rem) sentences.unshift(rem);
+  } else {
+    pieces.push(first);
+  }
+
+  // Remaining sentences merge greedily up to 250 chars per piece.
+  let buf = "";
+  for (const s of sentences) {
+    if (!buf) {
+      buf = s;
+      continue;
+    }
+    const joined = buf + " " + s;
+    if (joined.length <= 250) {
+      buf = joined;
+    } else {
+      pieces.push(buf);
+      buf = s;
+    }
+  }
+  if (buf) pieces.push(buf);
+  return pieces;
+}
+
+function brauoIsVoiceSlow(slowVoices, voiceId, nowMs) {
+  if (!slowVoices || !voiceId) return false;
+  const markedAt = slowVoices[voiceId];
+  if (markedAt == null || typeof markedAt !== "number") return false;
+  return nowMs - markedAt < BRAUO_SLOW_VOICE_TTL_MS;
+}
+
+function brauoMarkVoiceSlow(slowVoices, voiceId, nowMs) {
+  const next = Object.assign({}, slowVoices || {});
+  if (voiceId) next[voiceId] = nowMs;
+  return next;
+}
