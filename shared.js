@@ -146,3 +146,81 @@ function brauoMarkVoiceSlow(slowVoices, voiceId, nowMs) {
   if (voiceId) next[voiceId] = nowMs;
   return next;
 }
+
+// Speakable-text cleaning: delete noise / join fragments only — never rewrite words.
+function brauoCleanText(text) {
+  let t = String(text || "");
+  // Soft hyphen, zero-width space/joiner/non-joiner, BOM.
+  t = t.replace(/[\u00AD\u200B-\u200D\uFEFF]/g, "");
+  t = t.replace(/\u00A0/g, " ");
+  // Common Latin ligatures → ASCII letter pairs.
+  t = t.replace(/\uFB00/g, "ff");
+  t = t.replace(/\uFB01/g, "fi");
+  t = t.replace(/\uFB02/g, "fl");
+  t = t.replace(/\uFB03/g, "ffi");
+  t = t.replace(/\uFB04/g, "ffl");
+  // Wikipedia-style bracket noise: [23], [note 1], [citation needed], [edit], [editar].
+  t = t.replace(/\[\s*(?:\d{1,3}|note\s+\d{1,3}|citation needed|edit|editar)\s*\]/gi, "");
+  t = t.replace(/\s+/g, " ").trim();
+  return t;
+}
+
+// True when the text shows ≥3 distinct Markdown marker kinds (raw .md smell test).
+function brauoLooksLikeMarkdown(text) {
+  const t = String(text || "");
+  let kinds = 0;
+  if (/^#{1,6}\s/m.test(t)) kinds++;
+  if (/```/.test(t)) kinds++;
+  if (/^[-*+]\s/m.test(t)) kinds++;
+  if (/\[[^\]]+\]\([^)]+\)/.test(t)) kinds++;
+  if (/^\d+\.\s/m.test(t)) kinds++;
+  if (/^>\s/m.test(t)) kinds++;
+  return kinds >= 3;
+}
+
+// Strip Markdown structure for TTS; keep words, drop syntax. Line-local for emphasis.
+function brauoStripMarkdown(text) {
+  let t = String(text || "");
+  // Fenced code blocks removed entirely (including fences).
+  t = t.replace(/```[\s\S]*?```/g, "");
+
+  const lines = t.split(/\r?\n/);
+  const out = [];
+  for (let line of lines) {
+    // Horizontal rules.
+    if (/^\s*(-{3,}|\*{3,})\s*$/.test(line)) continue;
+
+    // Headings: keep the title text.
+    line = line.replace(/^#{1,6}\s+/, "");
+    // Blockquotes: strip leading marker.
+    line = line.replace(/^>\s?/, "");
+    // Unordered / ordered list markers; keep item text.
+    line = line.replace(/^[-*+]\s+/, "");
+    line = line.replace(/^\d+\.\s+/, "");
+
+    // Table rows: | a | b | → "a, b"
+    const trimmed = line.trim();
+    if (trimmed.includes("|") && /^\|.*\|$/.test(trimmed)) {
+      let body = trimmed;
+      if (body.startsWith("|")) body = body.slice(1);
+      if (body.endsWith("|")) body = body.slice(0, -1);
+      line = body.split("|").map((c) => c.trim()).filter(Boolean).join(", ");
+    }
+
+    // Images gone; links keep label.
+    line = line.replace(/!\[[^\]]*\]\([^)]*\)/g, "");
+    line = line.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1");
+
+    // Paired emphasis on the same line only. Digit/word-adjacent * / _ stay (e.g. 2*3*4).
+    line = line.replace(/\*\*([^*]+)\*\*/g, "$1");
+    line = line.replace(/__([^_]+)__/g, "$1");
+    line = line.replace(/(?<![*\w])\*([^*]+)\*(?!\w)/g, "$1");
+    line = line.replace(/(?<![_\w])_([^_]+)_(?!\w)/g, "$1");
+
+    // Inline code: keep inner text.
+    line = line.replace(/`([^`]+)`/g, "$1");
+
+    out.push(line);
+  }
+  return out.join("\n");
+}

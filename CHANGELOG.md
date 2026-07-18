@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.16.0] - 2026-07-18
+
+- Cleaner reading: Wikipedia-style citation markers ("[23]", "[edit]") and typographic junk (soft hyphens, invisible characters) are no longer spoken.
+- Raw Markdown files now read as natural text: headings, lists, links, and tables are spoken without "hash hash" or asterisks, and code blocks are skipped.
+
 ## [0.15.0] - 2026-07-17
 
 - Slow voices now start speaking within a few seconds: long paragraphs are requested sentence by sentence and playback begins as soon as the first one is ready, instead of waiting for the whole paragraph.

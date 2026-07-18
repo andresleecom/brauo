@@ -28,6 +28,9 @@
   const cache = new Map();
   // voiceId -> timestamp when marked slow (persisted in chrome.storage.local).
   let slowVoices = {};
+  // text/plain + markdown smell: decided once at reader activation, not per block.
+  let plainMarkdownPage = false;
+  let plainMarkdownDecided = false;
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -124,10 +127,22 @@
     });
   }
 
+  function ensurePlainMarkdownDecision() {
+    if (plainMarkdownDecided) return;
+    plainMarkdownDecided = true;
+    try {
+      plainMarkdownPage = document.contentType === "text/plain" &&
+        brauoLooksLikeMarkdown((document.body && document.body.innerText) || "");
+    } catch (_) {
+      plainMarkdownPage = false;
+    }
+  }
+
   function enterReadingMode() {
     readingMode = true;
     bubble.style.display = "none";
     controls.style.display = "flex";
+    ensurePlainMarkdownDecision();
     collectBlocks();
     updateSelectionRange();
     refreshSlowVoices();
@@ -243,11 +258,36 @@
   });
 
   // ---------- Blocks ----------
+  // Raw innerText after optional DOM-noise clone (allocation only when noise is present).
+  function elementTextRaw(el) {
+    if (!el) return "";
+    const hasNoise = el.querySelector &&
+      el.querySelector("sup.reference, .mw-editsection, sup a[href^='#cite']");
+    if (!hasNoise) return el.innerText || "";
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll("sup.reference, .mw-editsection").forEach((n) => n.remove());
+    clone.querySelectorAll("sup").forEach((sup) => {
+      if (sup.querySelector('a[href^="#cite"]')) sup.remove();
+    });
+    return clone.innerText || "";
+  }
+
+  function finalizeSpeakable(raw) {
+    // Strip Markdown while newlines still exist; clean collapses whitespace last.
+    let t = raw;
+    if (plainMarkdownPage) t = brauoStripMarkdown(t);
+    return brauoCleanText(t);
+  }
+
   function textOf(el) {
+    ensurePlainMarkdownDecision();
     if (el.tagName === "TR") {
-      return Array.from(el.cells).map((c) => c.innerText.replace(/\s+/g, " ").trim()).filter(Boolean).join(", ");
+      return Array.from(el.cells)
+        .map((c) => finalizeSpeakable(elementTextRaw(c)))
+        .filter(Boolean)
+        .join(", ");
     }
-    return (el.innerText || "").replace(/\s+/g, " ").trim();
+    return finalizeSpeakable(elementTextRaw(el));
   }
 
   function collectBlocks() {
