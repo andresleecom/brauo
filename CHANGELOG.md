@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.17.0] - 2026-07-18
+
+- Installing the extension now opens the welcome tour: a short article about Brauo, available in ten languages with audio, that you can immediately read aloud with the extension itself.
+
 ## [0.16.0] - 2026-07-18
 
 - Cleaner reading: Wikipedia-style citation markers ("[23]", "[edit]") and typographic junk (soft hyphens, invisible characters) are no longer spoken.

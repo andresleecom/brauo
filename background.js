@@ -203,3 +203,11 @@ chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
   return true;
 });
 
+
+// First install: open the welcome tour (a listenable "what is Brauo" article the
+// user can immediately try the reader on). Updates and reloads do not open it.
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "install") {
+    chrome.tabs.create({ url: "https://brauo.com/welcome?src=ext" });
+  }
+});
